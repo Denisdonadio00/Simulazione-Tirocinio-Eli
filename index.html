@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Ripasso Logopedia</title>
+<meta name="description" content="Flashcard per lo studio di Logopedia con ripetizione dilazionata.">
+
+<!-- PWA / iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ripasso Logopedia">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#12151A">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link id="manifest-link" rel="manifest" href="manifest.json">
+
+<style>
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+:root{
+  --ink: #12151A;
+  --ink-2: #1B2028;
+  --ink-3: #232A35;
+  --ink-4: #2C3542;
+  --voce: #4ECDC4;
+  --voce-dim: #2E7A73;
+  --corallo: #FF6F59;
+  --corallo-dim: #B24C3F;
+  --oro: #F2C14E;
+  --text: #EDEFF2;
+  --text-dim: #97A1B0;
+  --text-faint: #626B7A;
+  --border: rgba(255,255,255,0.08);
+  --border-2: rgba(255,255,255,0.14);
+  --danger: #FF6F59;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+  --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas, monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background: radial-gradient(circle at 20% 0%, #171B22 0%, var(--ink) 55%);
+  color: var(--text);
+  font-family: var(--font-body);
+  overscroll-behavior-y: none;
+  -webkit-user-select:none; user-select:none;
+}
+input, textarea { user-select:text; -webkit-user-select:text; }
+
+#app{
+  max-width: 560px;
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+
+/* ---------- SPLASH ---------- */
+.splash{
+  position:fixed; inset:0; z-index:100;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background: radial-gradient(circle at 50% 18%, #1B2530 0%, var(--ink) 62%);
+  overflow:hidden;
+  touch-action: none;
+  transition: opacity .5s ease, transform .5s cubic-bezier(.22,.9,.36,1);
+}
+.splash.splash-leaving{
+  opacity:0;
+  transform: translateY(-6%);
+  pointer-events:none;
+}
+.splash-hearts{
+  position:absolute; inset:0; overflow:hidden; pointer-events:none;
+}
+.heart-particle{
+  position:absolute;
+  bottom:-40px;
+  will-change: transform, opacity;
+  line-height:1;
+  animation-name: heartRise;
+  animation-timing-function: cubic-bezier(.2,.7,.4,1);
+  animation-fill-mode: forwards;
+}
+@keyframes heartRise{
+  0%{ transform: translate(0,0) scale(var(--s,1)) rotate(var(--rot,0deg)); opacity:0; }
+  12%{ opacity: var(--o,0.85); }
+  78%{ opacity: var(--o,0.85); }
+  100%{ transform: translate(var(--drift,0px), -118vh) scale(var(--s,1)) rotate(var(--rot,0deg)); opacity:0; }
+}
+.splash-content{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:14px; padding: 0 32px; position:relative; z-index:2;
+  animation: splashIn .7s ease-out;
+}
+@keyframes splashIn{ from{ opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+.splash-mark{ width:64px; height:64px; margin-bottom:6px; filter: drop-shadow(0 10px 26px rgba(78,205,196,0.18)); }
+.splash-title{
+  font-family: var(--font-display); font-size:30px; margin:0; letter-spacing:-0.01em; color:var(--text);
+}
+.splash-tagline{
+  font-size:15px; line-height:1.55; color: var(--text-dim); margin:0; max-width:280px;
+}
+.splash-swipe{
+  position:absolute; left:50%; bottom: calc(48px + var(--safe-bottom));
+  transform: translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  background:none; border:none; color: var(--text-dim); cursor:pointer;
+  font-family: var(--font-body); z-index:2; padding: 10px;
+}
+.splash-chevrons{ display:flex; flex-direction:column; align-items:center; height:26px; }
+.splash-chevrons span{
+  width:16px; height:16px;
+  border-left:2px solid var(--voce); border-top:2px solid var(--voce);
+  transform: rotate(45deg);
+  margin-top:-7px;
+  opacity:0.35;
+  animation: chevronPulse 1.6s ease-in-out infinite;
+}
+.splash-chevrons span:nth-child(1){ animation-delay:0s; }
+.splash-chevrons span:nth-child(2){ animation-delay:.18s; }
+.splash-chevrons span:nth-child(3){ animation-delay:.36s; }
+@keyframes chevronPulse{ 0%{opacity:0.15; transform:rotate(45deg) translateY(4px);} 40%{opacity:0.9; transform:rotate(45deg) translateY(-2px);} 100%{opacity:0.15; transform:rotate(45deg) translateY(4px);} }
+.splash-swipe-text{ font-size:12.5px; letter-spacing:0.02em; }
+
+/* ---------- HEADER ---------- */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: calc(16px + var(--safe-top)) 18px 12px;
+  position:sticky;
+  top:0;
+  z-index:20;
+  background: linear-gradient(var(--ink) 70%, transparent);
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-mark{ width:38px; height:38px; flex-shrink:0; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.15; }
+.brand-title{ font-family: var(--font-display); font-size:19px; font-weight:700; letter-spacing:-0.01em; }
+.brand-sub{ font-size:11.5px; color: var(--text-dim); font-family: var(--font-mono); letter-spacing:0.01em; }
+
+.streak-pill{
+  display:flex; align-items:center; gap:6px;
+  background: var(--ink-3);
+  border:1px solid var(--border);
+  padding:7px 13px;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-weight:600;
+  font-size:14px;
+}
+.streak-flame{ color: var(--oro); font-size:10px; }
+
+/* ---------- VIEWS ---------- */
+.views{ flex:1; padding: 0 18px calc(140px + var(--safe-bottom)); }
+.view{ display:none; animation: fadeUp .28s ease; }
+.view-active{ display:block; }
+@keyframes fadeUp{ from{ opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+.view-title{
+  font-family: var(--font-display);
+  font-size: 28px;
+  margin: 6px 0 18px;
+  letter-spacing: -0.01em;
+}
+.section-title{
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 26px 0 12px;
+}
+
+/* ---------- CHIPS ---------- */
+.chips-row{
+  display:flex; gap:8px; overflow-x:auto;
+  padding: 4px 2px 14px;
+  scrollbar-width:none;
+}
+.chips-row::-webkit-scrollbar{ display:none; }
+.chip{
+  flex-shrink:0;
+  padding:8px 14px;
+  border-radius:100px;
+  background: var(--ink-3);
+  border:1px solid var(--border);
+  color: var(--text-dim);
+  font-size:13px;
+  font-weight:600;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.chip.chip-active{
+  background: var(--voce);
+  color: #0A1513;
+  border-color: var(--voce);
+}
+.chip .chip-count{ opacity:0.7; font-family:var(--font-mono); margin-left:4px; font-weight:500;}
+
+/* ---------- STUDY META ---------- */
+.study-meta{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:14px;
+  font-size:13px;
+  color: var(--text-dim);
+}
+.link-btn{
+  background:none; border:none; color: var(--voce);
+  font-size:13px; font-weight:600; cursor:pointer; padding:4px;
+  font-family: var(--font-body);
+}
+.link-btn.link-on{ color: var(--corallo); }
+
+/* ---------- STAGE / FLASHCARD ---------- */
+.stage{ position:relative; min-height: 380px; display:flex; align-items:stretch; }
+.card-wrap{ width:100%; perspective: 1400px; }
+
+.flashcard{
+  position:relative;
+  width:100%;
+  min-height: 380px;
+  border-radius: var(--radius-lg);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(.22,.9,.36,1);
+  cursor:pointer;
+}
+.flashcard.flipped{ transform: rotateY(180deg); }
+.flashcard.leaving-left{ transform: translateX(-140%) rotate(-8deg); transition: transform .32s ease-in; }
+.flashcard.leaving-right{ transform: translateX(140%) rotate(8deg); transition: transform .32s ease-in; }
+.flashcard.flipped.leaving-left{ transform: translateX(-140%) rotate(-8deg) rotateY(180deg); }
+.flashcard.flipped.leaving-right{ transform: translateX(140%) rotate(8deg) rotateY(180deg); }
+.flashcard.entering{ animation: cardIn .32s ease-out; }
+@keyframes cardIn{ from{ opacity:0; transform: translateY(14px) scale(.97);} to{opacity:1; transform: translateY(0) scale(1);} }
+
+.face{
+  position:absolute; inset:0;
+  border-radius: var(--radius-lg);
+  backface-visibility: hidden;
+  display:flex; flex-direction:column;
+  padding: 26px 24px;
+  border:1px solid var(--border-2);
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,0.6);
+}
+.face-front{
+  background: linear-gradient(160deg, var(--ink-3) 0%, var(--ink-2) 100%);
+}
+.face-back{
+  background: linear-gradient(160deg, #16332F 0%, var(--ink-2) 70%);
+  transform: rotateY(180deg);
+}
+.face-tag{
+  align-self:flex-start;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--voce);
+  background: rgba(78,205,196,0.12);
+  border:1px solid rgba(78,205,196,0.3);
+  padding: 5px 10px;
+  border-radius: 100px;
+  margin-bottom: 18px;
+}
+.face-text{
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height:1.42;
+  margin:0;
+  flex:1;
+  overflow-y:auto;
+}
+.face-back .face-text{ font-size:18px; font-family: var(--font-body); font-weight: 400; }
+.face-hint{
+  align-self:center;
+  font-size: 12px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  margin-top: 12px;
+}
+
+.empty-state{
+  width:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:10px; padding: 40px 20px;
+  color: var(--text-dim);
+}
+.empty-wave{ display:flex; gap:6px; align-items:flex-end; height:40px; margin-bottom:8px; }
+.empty-wave span{
+  width:6px; border-radius:4px; background: var(--voce); opacity:0.55;
+  animation: waveBounce 1.4s ease-in-out infinite;
+}
+.empty-wave span:nth-child(1){ height:14px; animation-delay:0s; }
+.empty-wave span:nth-child(2){ height:26px; animation-delay:.1s; }
+.empty-wave span:nth-child(3){ height:38px; animation-delay:.2s; background:var(--corallo);}
+.empty-wave span:nth-child(4){ height:22px; animation-delay:.3s; }
+.empty-wave span:nth-child(5){ height:12px; animation-delay:.4s; }
+@keyframes waveBounce{ 0%,100%{ transform:scaleY(1);} 50%{ transform:scaleY(0.5);} }
+.empty-state h2{ font-family: var(--font-display); font-size:20px; margin:0; color:var(--text); }
+.empty-state p{ font-size:13.5px; margin:0; max-width:320px; line-height:1.5; }
+
+/* ---------- RATE ROW ---------- */
+.rate-row{
+  display:grid; grid-template-columns: repeat(4,1fr); gap:8px;
+  margin-top:16px;
+}
+.rate-btn{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding: 12px 4px 10px;
+  border-radius: var(--radius-md);
+  border:1px solid var(--border-2);
+  background: var(--ink-3);
+  color:var(--text);
+  cursor:pointer;
+  font-family: var(--font-body);
+}
+.rate-btn:active{ transform: scale(0.96); }
+.rate-label{ font-size:13px; font-weight:700; }
+.rate-sub{ font-size:11px; color:var(--text-dim); font-family: var(--font-mono); }
+.rate-again{ border-color: rgba(255,111,89,0.35); }
+.rate-again .rate-label{ color: var(--corallo); }
+.rate-hard{ border-color: rgba(242,193,78,0.3); }
+.rate-hard .rate-label{ color: var(--oro); }
+.rate-good{ border-color: rgba(78,205,196,0.35); }
+.rate-good .rate-label{ color: var(--voce); }
+.rate-easy{ border-color: rgba(78,205,196,0.5); background: rgba(78,205,196,0.08); }
+.rate-easy .rate-label{ color: var(--voce); }
+
+/* ---------- STATS ---------- */
+.stat-grid{
+  display:grid; grid-template-columns: 1fr 1fr; gap:10px;
+}
+.stat-card{
+  background: var(--ink-3);
+  border:1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  display:flex; flex-direction:column; gap:4px;
+}
+.stat-num{ font-family: var(--font-display); font-size: 34px; line-height:1; color: var(--voce); }
+.stat-lbl{ font-size:12.5px; color: var(--text-dim); }
+
+.cat-bars{ display:flex; flex-direction:column; gap:14px; }
+.cat-bar-item{ display:flex; flex-direction:column; gap:6px; }
+.cat-bar-top{ display:flex; justify-content:space-between; font-size:13px; }
+.cat-bar-top .cat-name{ color:var(--text); font-weight:600; }
+.cat-bar-top .cat-frac{ color:var(--text-dim); font-family:var(--font-mono); font-size:12px; }
+.cat-bar-track{ height:8px; background: var(--ink-3); border-radius:100px; overflow:hidden; }
+.cat-bar-fill{ height:100%; background: linear-gradient(90deg, var(--voce-dim), var(--voce)); border-radius:100px; }
+
+.danger-link{
+  display:block; margin: 34px auto 10px; background:none; border:none;
+  color: var(--text-faint); font-size:12.5px; text-decoration:underline;
+  cursor:pointer; font-family:var(--font-body);
+}
+
+/* ---------- MANAGE ---------- */
+.search-row{ margin-bottom:12px; }
+#searchInput{
+  width:100%; padding:12px 14px; border-radius: var(--radius-md);
+  border:1px solid var(--border-2); background: var(--ink-3);
+  color: var(--text); font-size:14px; font-family: var(--font-body);
+}
+#searchInput::placeholder{ color: var(--text-faint); }
+
+.card-list{ display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+.card-item{
+  background: var(--ink-3);
+  border:1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 13px 14px;
+  display:flex; flex-direction:column; gap:6px;
+  cursor:pointer;
+}
+.card-item-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+.card-item-front{ font-size:14.5px; font-weight:600; line-height:1.35; }
+.card-item-tag{
+  flex-shrink:0;
+  font-family: var(--font-mono); font-size:10px; text-transform:uppercase;
+  color: var(--text-dim); background: var(--ink-4); padding:3px 8px; border-radius:100px;
+  letter-spacing:0.04em;
+}
+.card-item-back{ font-size:12.5px; color: var(--text-dim); line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.card-item-meta{ font-size:10.5px; color: var(--text-faint); font-family: var(--font-mono); }
+.no-results{ text-align:center; color: var(--text-dim); font-size:13.5px; padding: 30px 10px; }
+
+/* ---------- BOTTOM NAV ---------- */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0;
+  display:flex; justify-content:center;
+  z-index:30;
+  pointer-events:none;
+}
+.bottom-nav{
+  max-width:560px; margin:0 auto; left:50%; transform: translateX(-50%);
+  width:100%;
+}
+.bottom-nav{
+  display:flex;
+  background: rgba(27,32,40,0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border);
+  padding: 10px 10px calc(10px + var(--safe-bottom));
+  pointer-events:auto;
+}
+.nav-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:4px;
+  background:none; border:none; color: var(--text-faint);
+  padding: 6px 4px; cursor:pointer; font-family: var(--font-body); font-size:11px; font-weight:600;
+}
+.nav-icon{ width:22px; height:22px; fill: currentColor; stroke:none; }
+.nav-btn.nav-active{ color: var(--voce); }
+.nav-btn.nav-active .nav-icon{ fill: var(--voce); }
+
+/* ---------- FAB ---------- */
+.fab{
+  position:fixed;
+  right: calc(50% - 280px + 18px);
+  bottom: calc(88px + var(--safe-bottom));
+  width:56px; height:56px; border-radius:50%;
+  background: var(--corallo);
+  color:#1A0E0B;
+  border:none;
+  font-size:28px;
+  line-height:56px;
+  text-align:center;
+  box-shadow: 0 12px 28px -8px rgba(255,111,89,0.55);
+  cursor:pointer;
+  z-index:25;
+  display:none;
+}
+@media (max-width: 596px){
+  .fab{ right: 18px; }
+}
+.fab.fab-visible{ display:block; }
+.fab:active{ transform: scale(0.94); }
+
+/* ---------- MODAL ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background: rgba(6,8,11,0.6);
+  display:flex; align-items:flex-end; justify-content:center;
+  opacity:0; pointer-events:none; transition: opacity .22s ease;
+  z-index:50;
+}
+.modal-overlay.modal-open{ opacity:1; pointer-events:auto; }
+.modal-sheet{
+  width:100%; max-width:560px;
+  background: var(--ink-2);
+  border-top-left-radius: 24px; border-top-right-radius:24px;
+  border: 1px solid var(--border-2); border-bottom:none;
+  padding: 10px 20px calc(24px + var(--safe-bottom));
+  transform: translateY(30px);
+  transition: transform .26s cubic-bezier(.22,.9,.36,1);
+  max-height: 88vh; overflow-y:auto;
+}
+.modal-overlay.modal-open .modal-sheet{ transform: translateY(0); }
+.modal-handle{ width:38px; height:4px; background: var(--border-2); border-radius:100px; margin: 6px auto 14px; }
+.modal-title{ font-family: var(--font-display); font-size:21px; margin: 0 0 16px; }
+.field-label{ display:block; font-size:12px; font-family: var(--font-mono); text-transform:uppercase; letter-spacing:0.06em; color: var(--text-dim); margin: 14px 0 6px; }
+.field-input{
+  width:100%; background: var(--ink-3); border:1px solid var(--border-2);
+  border-radius: var(--radius-sm); color: var(--text); padding: 11px 13px;
+  font-size:14.5px; font-family: var(--font-body); resize: vertical;
+}
+.field-input:focus{ outline:none; border-color: var(--voce); }
+.modal-actions{ display:flex; gap:8px; margin-top:22px; }
+.btn-primary{
+  flex:1; background: var(--voce); color:#0A1513; border:none; border-radius: var(--radius-sm);
+  padding: 13px; font-weight:700; font-size:14.5px; cursor:pointer; font-family: var(--font-body);
+}
+.btn-ghost{
+  background:none; border:1px solid var(--border-2); color: var(--text);
+  border-radius: var(--radius-sm); padding: 13px 16px; font-size:14px; cursor:pointer;
+  font-family: var(--font-body); font-weight:600;
+}
+.btn-ghost.danger{ color: var(--corallo); border-color: rgba(255,111,89,0.4); }
+
+/* ---------- TOAST ---------- */
+.toast{
+  position:fixed; left:50%; bottom: calc(96px + var(--safe-bottom));
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink-4); color: var(--text);
+  padding: 11px 18px; border-radius: 100px; font-size:13.5px;
+  border:1px solid var(--border-2);
+  opacity:0; pointer-events:none; transition: all .25s ease;
+  z-index:60; white-space:nowrap;
+}
+.toast.toast-show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+</style>
+</head>
+<body>
+
+<!-- ===== SPLASH / WELCOME ===== -->
+<div id="splash" class="splash">
+  <div class="splash-hearts" id="splashHearts" aria-hidden="true"></div>
+  <div class="splash-content">
+    <svg class="splash-mark" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="1" y="1" width="46" height="46" rx="12" fill="var(--ink-2)"/>
+      <rect x="9"  y="20" width="4" height="8"  rx="2" fill="var(--voce)"/>
+      <rect x="16" y="15" width="4" height="18" rx="2" fill="var(--voce)"/>
+      <rect x="23" y="8"  width="4" height="32" rx="2" fill="var(--corallo)"/>
+      <rect x="30" y="13" width="4" height="22" rx="2" fill="var(--voce)"/>
+      <rect x="37" y="19" width="4" height="10" rx="2" fill="var(--voce)"/>
+    </svg>
+    <h1 class="splash-title">Ripasso Logopedia</h1>
+    <p class="splash-tagline">Progettata per la mia piccola<br>logopedista ansiosa</p>
+  </div>
+  <button class="splash-swipe" id="splashSwipe" type="button" aria-label="Entra nell'app">
+    <span class="splash-chevrons">
+      <span></span><span></span><span></span>
+    </span>
+    <span class="splash-swipe-text">Scorri verso l&rsquo;alto per iniziare</span>
+  </button>
+</div>
+
+<div id="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="1" y="1" width="46" height="46" rx="12" fill="var(--ink-2)"/>
+        <rect x="9"  y="20" width="4" height="8"  rx="2" fill="var(--voce)"/>
+        <rect x="16" y="15" width="4" height="18" rx="2" fill="var(--voce)"/>
+        <rect x="23" y="8"  width="4" height="32" rx="2" fill="var(--corallo)"/>
+        <rect x="30" y="13" width="4" height="22" rx="2" fill="var(--voce)"/>
+        <rect x="37" y="19" width="4" height="10" rx="2" fill="var(--voce)"/>
+      </svg>
+      <div class="brand-text">
+        <span class="brand-title">Ripasso Logopedia</span>
+        <span class="brand-sub">Logopedia &middot; ripasso quotidiano</span>
+      </div>
+    </div>
+    <div class="streak-pill" id="streakPill" title="Giorni consecutivi di studio">
+      <span class="streak-flame">&#9679;</span>
+      <span id="streakCount">0</span>
+    </div>
+  </header>
+
+  <!-- ===== VIEWS ===== -->
+  <main class="views">
+
+    <!-- STUDIA -->
+    <section id="view-study" class="view view-active">
+      <div class="chips-row" id="chipsRow"></div>
+
+      <div class="study-meta">
+        <span id="studyCounter">0 carte da ripassare</span>
+        <button class="link-btn" id="aheadToggle" type="button">Studia in anticipo</button>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="empty-state" id="emptyState" hidden>
+          <div class="empty-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <h2>Tutto ripassato per oggi!</h2>
+          <p>Ottimo lavoro. Torna domani per le prossime carte in scadenza, oppure attiva &laquo;Studia in anticipo&raquo;.</p>
+        </div>
+
+        <div class="card-wrap" id="cardWrap">
+          <div class="flashcard" id="flashcard">
+            <div class="face face-front">
+              <span class="face-tag" id="tagFront">Categoria</span>
+              <p class="face-text" id="textFront">Domanda</p>
+              <span class="face-hint">Tocca per girare</span>
+            </div>
+            <div class="face face-back">
+              <span class="face-tag" id="tagBack">Categoria</span>
+              <p class="face-text" id="textBack">Risposta</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rate-row" id="rateRow" hidden>
+        <button class="rate-btn rate-again" data-rate="0" type="button">
+          <span class="rate-label">Ripeti</span><span class="rate-sub" id="subAgain">&lt;1 min</span>
+        </button>
+        <button class="rate-btn rate-hard" data-rate="1" type="button">
+          <span class="rate-label">Difficile</span><span class="rate-sub" id="subHard">10 min</span>
+        </button>
+        <button class="rate-btn rate-good" data-rate="2" type="button">
+          <span class="rate-label">Buono</span><span class="rate-sub" id="subGood">1 gg</span>
+        </button>
+        <button class="rate-btn rate-easy" data-rate="3" type="button">
+          <span class="rate-label">Facile</span><span class="rate-sub" id="subEasy">3 gg</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- STATISTICHE -->
+    <section id="view-stats" class="view">
+      <h1 class="view-title">Statistiche</h1>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="stat-num" id="statDueToday">0</span>
+          <span class="stat-lbl">Da ripassare oggi</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statMastered">0</span>
+          <span class="stat-lbl">Carte padroneggiate</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statStreak">0</span>
+          <span class="stat-lbl">Giorni di fila</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-num" id="statReviewsToday">0</span>
+          <span class="stat-lbl">Ripassi fatti oggi</span>
+        </div>
+      </div>
+
+      <h2 class="section-title">Per argomento</h2>
+      <div class="cat-bars" id="catBars"></div>
+
+      <button class="danger-link" id="resetProgressBtn" type="button">Reimposta tutti i progressi</button>
+    </section>
+
+    <!-- LE MIE CARTE -->
+    <section id="view-manage" class="view">
+      <h1 class="view-title">Le mie carte</h1>
+      <div class="search-row">
+        <input type="search" id="searchInput" placeholder="Cerca tra le carte&hellip;" autocomplete="off">
+      </div>
+      <div class="chips-row" id="chipsRowManage"></div>
+      <div class="card-list" id="cardList"></div>
+    </section>
+
+  </main>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn nav-active" data-view="view-study" type="button">
+      <svg viewBox="0 0 24 24" class="nav-icon"><rect x="3" y="9" width="4" height="6" rx="1.3"/><rect x="10" y="5" width="4" height="14" rx="1.3"/><rect x="17" y="7" width="4" height="10" rx="1.3"/></svg>
+      <span>Studia</span>
+    </button>
+    <button class="nav-btn" data-view="view-stats" type="button">
+      <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 12 L12 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 12 L17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+      <span>Statistiche</span>
+    </button>
+    <button class="nav-btn" data-view="view-manage" type="button">
+      <svg viewBox="0 0 24 24" class="nav-icon"><rect x="3.5" y="4" width="17" height="4.2" rx="1.2"/><rect x="3.5" y="10" width="17" height="4.2" rx="1.2"/><rect x="3.5" y="16" width="17" height="4.2" rx="1.2"/></svg>
+      <span>Le mie carte</span>
+    </button>
+  </nav>
+
+  <!-- FAB add card -->
+  <button class="fab" id="fabAdd" type="button" aria-label="Aggiungi carta">+</button>
+
+</div>
+
+<!-- ===== MODAL: add/edit card ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h2 class="modal-title" id="modalTitle">Nuova carta</h2>
+    <form id="cardForm">
+      <label class="field-label" for="fieldFront">Fronte (domanda)</label>
+      <textarea id="fieldFront" class="field-input" rows="2" required placeholder="Es. Cos'è la disprassia?"></textarea>
+
+      <label class="field-label" for="fieldBack">Retro (risposta)</label>
+      <textarea id="fieldBack" class="field-input" rows="3" required placeholder="Es. Disturbo dell'esecuzione di un gesto intenzionale"></textarea>
+
+      <label class="field-label" for="fieldCat">Categoria</label>
+      <input type="text" id="fieldCat" class="field-input" list="catList" required placeholder="Es. Fonetica e Fonologia">
+      <datalist id="catList"></datalist>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="modalCancel">Annulla</button>
+        <button type="button" class="btn-ghost danger" id="modalDelete" hidden>Elimina</button>
+        <button type="submit" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script id="seed-cards" type="application/json">[{"cat": "Sviluppo del linguaggio", "front": "Quali sono gli indici di rischio nel primo sviluppo del linguaggio?", "back": "Mancanza di contatto oculare, scarso utilizzo di gesti deittici e rappresentativi, scarsa presenza del gioco simbolico, comprensione e produzione di meno di 50 parole a circa 2 anni."}, {"cat": "Valutazione e Test", "front": "Perché è importante il test Peabody per la comprensione lessicale?", "back": "Perché valuta il livello lessicale in comprensione (dai 3 anni e mezzo agli 11 anni e mezzo) senza richiedere una risposta verbale, utile anche con bambini poco collaborativi."}, {"cat": "Sviluppo del linguaggio", "front": "Descrivi brevemente le tappe dello sviluppo fisiologico del linguaggio.", "back": "Periodo prelinguistico (lallazione, primi vocalismi, gesti deittici e rappresentativi) fino a circa 12 mesi; prime parole e periodo bimodale (parola+gesto) fino a 18-20 mesi; esplosione del vocabolario e prime combinazioni di 2 parole intorno ai 20-24 mesi; sviluppo morfosintattico progressivo con la maggior parte delle competenze non verbali e verbali acquisite entro i 3 anni."}, {"cat": "Valutazione e Test", "front": "Qual è l'importanza del contatto oculare nell'avvio dell'interazione comunicativa?", "back": "Il contatto oculare è il prerequisito dell'attenzione condivisa: permette di stabilire un canale comunicativo reciproco tra bambino e adulto, base per lo sviluppo dell'intenzionalità comunicativa, dei gesti deittici e successivamente del linguaggio verbale."}, {"cat": "Disfagia", "front": "Quali sono i principali segni clinici di aspirazione silente nel paziente disfagico?", "back": "Assenza di tosse riflessa nonostante il passaggio di materiale in via aerea, voce gorgogliante dopo la deglutizione, calo della saturazione di ossigeno, episodi febbrili ricorrenti o polmoniti ab ingestis senza segni clinici evidenti al momento del pasto."}, {"cat": "Fonetica e Fonologia", "front": "Qual è la differenza clinica tra un disturbo fonetico e un disturbo fonologico?", "back": "Il disturbo fonetico riguarda l'esecuzione articolatoria/motoria del suono (errore costante, indipendente dal contesto, es. distorsione di /r/); il disturbo fonologico riguarda l'organizzazione del sistema dei suoni nella mente del bambino (il fono può essere prodotto correttamente in isolamento ma sostituito/semplificato secondo regole sistematiche in parola)."}, {"cat": "Ipoacusia e Impianto Cocleare", "front": "Quali sono i criteri di eleggibilità e gli obiettivi principali dell'impianto cocleare nel bambino piccolo?", "back": "Criteri: ipoacusia neurosensoriale severa-profonda bilaterale non compensata da protesi acustiche tradizionali, integrità delle vie uditive centrali, assenza di controindicazioni cliniche. Obiettivi: fornire accesso precoce (idealmente entro i 12-18 mesi) all'informazione uditiva per consentire uno sviluppo del linguaggio verbale il più possibile spontaneo e in tempi fisiologici."}, {"cat": "Voce e Disfonia", "front": "Come si imposta la presa in carico logopedica del paziente adulto affetto da presbifonia?", "back": "Valutazione percettiva e strumentale della voce, esercizi di potenziamento della coordinazione pneumofonica, esercizi di tonificazione della muscolatura laringea (es. tecniche di resistenza/SOVT), igiene vocale e adattamento comunicativo alle esigenze quotidiane del paziente anziano."}, {"cat": "Disfagia", "front": "Quali sono le principali manovre di compenso posturali nella riabilitazione del paziente disfagico?", "back": "Flessione del capo (chin tuck) per proteggere le vie aeree, rotazione del capo dal lato paretico per deviare il bolo verso il lato sano, inclinazione laterale del capo dal lato sano, estensione del capo in casi selezionati: sono manovre da adattare al singolo profilo disfagico."}, {"cat": "Disfagia", "front": "Quali sono le correlazioni cliniche tra respirazione orale cronica, facies adenoidea e malocclusioni ortodontiche?", "back": "La respirazione orale cronica (spesso da ipertrofia adenoidea) determina una postura linguale bassa e anteriore invece che a contatto col palato; questo altera la crescita ossea del palato (palato stretto e ogivale), favorendo malocclusioni come morso aperto anteriore e deglutizione atipica, oltre alla tipica facies adenoidea (bocca semiaperta, labbro superiore corto)."}, {"cat": "Voce e Disfonia", "front": "Quali sono i correlati eziopatogenetici e le caratteristiche vocali percettive nei noduli cordali bilaterali?", "back": "Eziologia da abuso/uso scorretto cronico della voce (iperfunzione vocale, urla, forzature): il trauma meccanico ripetuto crea ispessimenti simmetrici sul terzo anteriore delle corde vocali. Percettivamente la voce risulta rauca, soffiata, con affaticamento vocale e talvolta raddoppio del registro (diplofonia)."}, {"cat": "Valutazione e Test", "front": "Che cos'è il test 'Moro' o screening uditivo comportamentale nella primissima infanzia?", "back": "È una prova di osservazione della reazione riflessa del neonato (riflesso di Moro/trasalimento) a uno stimolo sonoro improvviso, usata come screening comportamentale grossolano dell'udito nei primissimi mesi di vita, oggi ampiamente sostituita da metodiche oggettive come le otoemissioni acustiche."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Come si esegue il corretto posizionamento del logopedista/caregiver durante il pasto del paziente con disfagia grave?", "back": "Il paziente va posizionato seduto a 90°, capo lievemente flesso in avanti; il caregiver si pone all'altezza degli occhi del paziente o leggermente più in basso (mai dall'alto, per non indurre estensione del capo), somministrando piccole quantità con ritmo lento e verificando la deglutizione completa prima del boccone successivo."}, {"cat": "Sviluppo del linguaggio", "front": "Qual è la differenza clinica, diagnostica e terapeutica tra balbuzie evolutiva e balbuzie neurogena?", "back": "La balbuzie evolutiva insorge in età infantile (2-5 anni), spesso con familiarità, andamento fluttuante e possibile risoluzione spontanea; si tratta con terapie indirette/dirette su fluenza e gestione dell'ansia comunicativa. La balbuzie neurogena insorge in età adulta dopo un danno neurologico (ictus, trauma), non ha il tipico pattern evolutivo, non risponde sempre alle stesse tecniche e richiede un approccio riabilitativo mirato al danno neurologico sottostante."}, {"cat": "Disfagia", "front": "Quali sono i meccanismi d'azione della stimolazione tattile-termica nella disfagia?", "back": "Aumenta la sensibilità dei recettori orofaringei e facilita l'innesco più rapido e sincronizzato del riflesso di deglutizione, utile nei pazienti con ritardo o assenza del trigger deglutitorio."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Quali sono i criteri clinici per lo svezzamento (decannulazione) dalla cannula tracheostomica nel paziente neurologico?", "back": "Stabilità clinica e respiratoria, adeguata gestione delle secrezioni, riflesso di tosse efficace, tolleranza alla cuffiatura/decuffiatura e all'occlusione dello stoma, assenza di aspirazioni significative alla valutazione strumentale della deglutizione, recupero di un adeguato stato di coscienza e collaborazione."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "In un paziente laringectomizzato con protesi tracheo-esofagea, quando può comparire afonia?", "back": "Sempre possibile per malfunzionamento della protesi legato a possibile presenza di muco nel lume protesico."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Paziente 48 anni, T3N0M0, sottoposto a laringectomia totale: cosa subisce nell'immediato post-operatorio?", "back": "Svuotamento linfonodale bilaterale."}, {"cat": "Afasia e Disartria", "front": "Cosa prevede la valutazione del paziente disartrico?", "back": "Esame della funzione respiratoria, esame della funzione laringea, esame degli organi di articolazione: tutte le precedenti."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Paziente laringectomizzata riabilitata a voce erigmofonica riferisce disfagia per solidi in quinta seduta: cosa fa il logopedista?", "back": "Interrompe il trattamento per possibile spasmo del segmento faringo-esofageo."}, {"cat": "Afasia e Disartria", "front": "Quali sono gli obiettivi della riabilitazione della persona afasica?", "back": "Migliorare le capacità linguistiche, favorire la comunicazione, incoraggiare la partecipazione alla vita sociale e all'autonomia: tutte le precedenti."}, {"cat": "DSA, Lettura e Metafonologia", "front": "In quale categoria rientrano gli errori di transcodifica dal codice arabico a quello verbale e viceversa?", "back": "Errori lessicali."}, {"cat": "Sviluppo del linguaggio", "front": "Durante il primo approccio con un bambino con difficoltà comunicative, cosa si fa?", "back": "Si valuta l'interazione comunicativa."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Quale sub-test NON rientra nella 'Prova individuale' del test AC-MT (calcolo e soluzione di problemi)?", "back": "Giudizio di numerosità."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Come si calcola il punteggio Z per il parametro Velocità di lettura (T)?", "back": "(M - T) / DS"}, {"cat": "Sviluppo del linguaggio", "front": "Nel ritardo del linguaggio a prevalente componente fonetico-fonologica, che tipo di materiale terapeutico si sceglie?", "back": "Liste di non-parole."}, {"cat": "Valutazione e Test", "front": "Il bilancio fonetico viene somministrato per segnalare cosa?", "back": "La maturazione fonetico-fonologica."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Cosa occorre osservare per la valutazione della disgrafia?", "back": "Il comportamento motorio della mano e delle dita, la coordinazione oculo-motoria, l'orientamento spazio-temporale: tutte le risposte sono corrette."}, {"cat": "Disfagia", "front": "In età pediatrica, quando la deglutizione è funzionale?", "back": "Quando c'è acquisizione del controllo del capo, presenza del riflesso del vomito, presenza del riflesso di tosse, innesco del riflesso di deglutizione: tutte le precedenti."}, {"cat": "Valutazione e Test", "front": "Quale esercizio è utile al potenziamento della memoria di lavoro?", "back": "Span di memoria verbale di numeri (ordine diretto, inverso, crescente, decrescente) + span di memoria visiva di numeri e colori."}, {"cat": "Sviluppo del linguaggio", "front": "Quali attività svolgere in un bambino di 4 anni con ritardo del linguaggio da semplificazione di struttura?", "back": "Presentazione della corretta struttura fonologica della parola + esercizi di riconoscimento della forma corretta ed errata della parola."}, {"cat": "Sviluppo del linguaggio", "front": "Che cos'è la competenza pragmatica?", "back": "La capacità di cogliere l'insieme delle relazioni che legano il linguaggio e il contesto, necessarie per la comprensione del significato della comunicazione."}, {"cat": "Valutazione e Test", "front": "In base a cosa viene effettuata la revisione del programma di intervento logopedico?", "back": "In base alla verifica e al controllo dell'efficacia del trattamento."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "L'apposizione della protesi fonatoria, dopo creazione di fistola tracheo-esofagea, come avviene?", "back": "Per via anterograda con smart inserter."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "I fattori psicologici nel trattamento logopedico del laringectomizzato sono importanti per il buon esito?", "back": "Sempre."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Cosa sono le flange protesiche nella protesi tracheo-esofagea?", "back": "Due, una tracheale e una esofagea: alloggiano la protesi nella fistola tracheo-esofagea."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Di cosa tiene conto la riabilitazione esofagea (voce erigmofonica)?", "back": "Della capacità dell'esofago di fungere da riserva d'aria, in modo da porre in vibrazione la pseudoglottide."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Paziente laringectomizzato con svuotamento linfonodale bilaterale e turbe psicologiche recidivanti: acquisisce facilmente la voce erigmofonica?", "back": "Con grosse difficoltà, per gli aspetti di concentrazione e per la poca cedevolezza del segmento faringo-esofageo."}, {"cat": "Anatomia e Chirurgia ORL", "front": "In che punto si articola la cartilagine cricoide con la trachea?", "back": "In nessun punto in senso articolare vero: si connette tramite il legamento cricotracheale al primo anello tracheale."}, {"cat": "Anatomia e Chirurgia ORL", "front": "Quale muscolo NON appartiene ai muscoli intrinseci della laringe?", "back": "Il muscolo sternotiroideo (è un muscolo estrinseco)."}, {"cat": "Anatomia e Chirurgia ORL", "front": "Qual è il quadro morfologico iniziale del carcinoma squamocellulare della laringe?", "back": "Stadio iniziale: leucoplachie o eritroplachie."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Quali sono gli effetti collaterali della radioterapia in ambito ORL?", "back": "Precoci (acuti) e a lungo termine (cronici)."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Quali sono gli effetti collaterali precoci della radioterapia?", "back": "Mucosite, odinofagia, disfagia, xerostomia."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Quali sono gli effetti a lungo termine della radioterapia?", "back": "Secchezza permanente della cavità orale, osteoradionecrosi della mandibola, fibrosi, danno neurologico, ototossicità, stenosi carotidea, danno ai barocettori carotidei."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Chi è potenzialmente candidato alla protesi tracheo-esofagea?", "back": "Il soggetto con tratto esofageo cervicale cedevole non sottoposto a terapia coadiuvante, senza danno polmonare, con buona mobilità della mucosa esofagea alla VFS, Rx torace nella norma e fisiologica peristalsi esofagea: tutte le risposte sono corrette."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Il dispositivo Provox XtraFlow agevola la respirazione per quali caratteristiche?", "back": "Bassa resistenza respiratoria, riduce produzione di muco e tosse, semplice occlusione dello stoma, design discreto."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "L'occlusione digitale del tracheostoma nel paziente senza protesi tracheo-esofagea consente cosa?", "back": "La fonazione (l'aria espiratoria è indirizzata verso il segmento faringoesofageo)."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Alla videofluoroscopia (VFS), quando il SES coincide con la barra neoglottica?", "back": "Solo in fonazione."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Di cosa è costituito il flap valvolare pretensionato della protesi fonatoria?", "back": "Silicone elastomero medicale (fluoroplastic, ossido di argento)."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Qual è la sopravvivenza a 5 anni dalla diagnosi di tumore della laringe (statistica UE anni '90)?", "back": "Circa il 60%."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "In un paziente con laringectomia totale + glossectomia e ricostruzione del pavimento orale con lembo radiale, la fonazione è possibile?", "back": "Mai, perché manca l'organo principale per la produzione fonetico-fonologica (l'assenza della lingua impedisce l'articolazione dei fonemi)."}, {"cat": "Valutazione e Test", "front": "Cosa si valuta nella valutazione fonologica?", "back": "Come il bambino organizza i suoni che è in grado di produrre."}, {"cat": "Valutazione e Test", "front": "Cosa permette di raccogliere il questionario PVB (Primo Vocabolario del Bambino)?", "back": "Info attraverso gesti e gioco simbolico, il rapporto comprensione-produzione, l'imitazione, la composizione del vocabolario: tutte le precedenti."}, {"cat": "Sviluppo del linguaggio", "front": "Cosa studia la pragmatica?", "back": "L'uso del linguaggio nel contesto: analizza il rapporto tra significati e contesti, e le inferenze che permettono ai parlanti di assegnare un senso a parole e frasi."}, {"cat": "Valutazione e Test", "front": "Cosa valutano le Matrici Progressive di Raven?", "back": "L'intelligenza NON verbale."}, {"cat": "Valutazione e Test", "front": "Se un bambino ottiene Z = -1,2 deviazioni standard in un test, come si interpreta?", "back": "Rientra in una fascia di attenzione: la sua prestazione non è deficitaria (scala: 0/±1 DS = normale; tra -1 e -2 DS = fascia di attenzione; oltre -2 DS = disturbo)."}, {"cat": "Fonetica e Fonologia", "front": "Cosa si può avere nel disturbo fonetico-fonologico?", "back": "Errori fonetici, errori di sistema e/o errori di struttura."}, {"cat": "Valutazione e Test", "front": "Qual è il miglior fattore predittivo delle abilità linguistiche tra i 18 e 28 mesi secondo la Batteria?", "back": "La comprensione lessicale."}, {"cat": "Valutazione e Test", "front": "Quale test valuta la velocità visuo-motoria e le ricerche visive?", "back": "Il Test delle Cancellature."}, {"cat": "Sviluppo del linguaggio", "front": "Cosa comprende la consapevolezza fonologica globale?", "back": "Operazioni metafonologiche recettive e capacità di discriminazione di suoni, classificazione, fusione e segmentazione."}, {"cat": "Sviluppo del linguaggio", "front": "Nelle logopatie, il trattamento indiretto è sempre necessario?", "back": "No, va considerato talvolta utile, non sempre necessario."}, {"cat": "Sviluppo del linguaggio", "front": "Cosa caratterizza il periodo bimodale nello sviluppo del linguaggio?", "back": "L'uso contemporaneo di elementi vocali (primi vocalismi) e gesti."}, {"cat": "Sviluppo del linguaggio", "front": "A che età avviene la comprensione di frasi semplici nel linguaggio ricettivo (es. 'prendi la palla')?", "back": "18-24 mesi."}, {"cat": "Valutazione e Test", "front": "Cosa valuta il test Peabody?", "back": "Il livello lessicale in comprensione, dai 3 anni e mezzo agli 11 anni e mezzo."}, {"cat": "Sviluppo del linguaggio", "front": "Cosa sono gli enunciati cross-modali?", "back": "Enunciati composti da una parola rappresentativa e un gesto deittico (es. dico 'pappa' e indico la cucina)."}, {"cat": "Sviluppo del linguaggio", "front": "Cosa compare a 20 mesi nello sviluppo del linguaggio?", "back": "Frequenti combinazioni bireferenziali parola-parola (il bambino 'combina 2 parole')."}, {"cat": "Sviluppo del linguaggio", "front": "Il ritardo del linguaggio nel bambino con disturbi delle funzioni orali/deglutizione è collegato a cosa nel bilancio fonetico?", "back": "Il bilancio viene somministrato per segnalare la maturazione fonetico-fonologica."}, {"cat": "Disfagia", "front": "Chi effettua l'esame clinico non strumentale delle disfagie?", "back": "Il logopedista."}, {"cat": "Afasia e Disartria", "front": "Come si valuta l'efficacia delle terapie nelle persone afasiche?", "back": "Attraverso testature standardizzate."}, {"cat": "Afasia e Disartria", "front": "Quali livelli del sistema linguistico possono essere compromessi in caso di afasia?", "back": "Fonetico-fonologico, semantico, lessicale, morfosintattico, sintattico, testuale, pragmatico in comprensione/produzione: tutti."}, {"cat": "Ipoacusia e Impianto Cocleare", "front": "Cosa prevede la terapia logopedica dell'ipoacusico secondo il Metodo Verbo-Tonale?", "back": "Il macro e il micro movimento corporeo."}, {"cat": "Fonetica e Fonologia", "front": "Quanti sono i foni del bilancio fonetico italiano?", "back": "23 consonanti e 7 vocali."}, {"cat": "Fonetica e Fonologia", "front": "Che cos'è il fono?", "back": "L'elemento sonoro che NON differenzia le parole (non ha valore distintivo di significato)."}, {"cat": "Fonetica e Fonologia", "front": "A cosa si riferisce il codice prossemico?", "back": "Alla posizione degli interlocutori."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Nelle prove di lettura MT, quale punteggio si attribuisce in caso di errori marginali?", "back": "0 punti."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Quali interventi servono al recupero/potenziamento della lettura?", "back": "Uso del tachistoscopio, sviluppo di attenzione e memoria di lavoro, sviluppo delle competenze metafonologiche: tutti."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Quale sub-test NON rientra nelle prove individuali della Batteria AC-MT?", "back": "Giudizio di numerosità."}, {"cat": "DSA, Lettura e Metafonologia", "front": "In quale categoria rientrano gli errori di transcodifica dal codice arabico a quello verbale e viceversa (Doc.3)?", "back": "Errori sintattici."}, {"cat": "Disfagia", "front": "Cosa occorre osservare per la valutazione della disfagia?", "back": "Il comportamento motorio, la coordinazione, e più in generale tutti gli aspetti motori e sensoriali coinvolti nella deglutizione: approccio multidimensionale (osservazione clinica completa)."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Gli errori non fonologici in lettura-scrittura indicano uno scarso consolidamento di quale stadio?", "back": "Lo stadio ortografico."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Su cosa si basa il programma per il trattamento della disgrafia?", "back": "Sviluppo delle competenze di base e sviluppo delle capacità di scrittura."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Cosa NON è contenuto nel test CMF per la scuola dell'infanzia?", "back": "Il riconoscimento della sillaba finale della parola."}, {"cat": "Valutazione e Test", "front": "Su cosa si basa la programmazione del piano di trattamento logopedico?", "back": "Valutazione logopedica, definizione degli obiettivi, scelta dei mezzi terapeutici: tutte le precedenti."}, {"cat": "Deontologia e Normativa", "front": "Cosa definisce il codice deontologico del logopedista (13/3/99)?", "back": "I compiti e i doveri professionali e le modalità dei rapporti con i pazienti e con i colleghi."}, {"cat": "Sviluppo del linguaggio", "front": "Entro quando tendono a risolversi la maggior parte dei processi di semplificazione fonetico-fonologica?", "back": "Entro i 36 mesi."}, {"cat": "Fonetica e Fonologia", "front": "Quali sono i primi fonemi acquisiti dal bambino?", "back": "/m/ /p/ /b/ /t/ /n/"}, {"cat": "Sviluppo del linguaggio", "front": "Come viene considerato l'uso di azioni e gesti comunicativi nello sviluppo fonologico del linguaggio?", "back": "Cruciale nei periodi di transizione dalle parole singole agli enunciati di due parole."}, {"cat": "Disfagia", "front": "I pazienti con disfagia privi di alimentazione autonoma con consistenze miste o liquidi a cosa devono essere sottoposti?", "back": "A screening e valutazione della disfagia."}, {"cat": "Valutazione e Test", "front": "A cosa serve lo screening?", "back": "Ad identificare in una popolazione i soggetti con una condizione patologica."}, {"cat": "Valutazione e Test", "front": "Un paziente con deficit cognitivo, prima di iniziare il trattamento logopedico, a quali visite deve essere sottoposto?", "back": "Visite neuropsichiatriche o fisiatriche."}, {"cat": "Afasia e Disartria", "front": "Cosa prevede la valutazione del paziente disartrico (Doc.3)?", "back": "Esame della funzione respiratoria, esame della funzione laringea, esame degli organi di articolazione: tutte."}, {"cat": "Disfagia", "front": "Che cos'è il Bedside examination?", "back": "Una valutazione effettuata al letto del paziente."}, {"cat": "Fonetica e Fonologia", "front": "Cosa studia la fonetica?", "back": "Le proprietà articolatorie dei suoni."}, {"cat": "Deontologia e Normativa", "front": "A quale normativa è inerente il profilo professionale del logopedista?", "back": "Al D.M. 14/09/1994 n° 742."}, {"cat": "Voce e Disfonia", "front": "Qual è lo scopo dell'uso dei foni occlusivi velari nelle gravi insufficienze velofaringee?", "back": "Aumentare la pressione orale e sottoglottica."}, {"cat": "Voce e Disfonia", "front": "Cos'è l'humming in riabilitazione vocale?", "back": "Un'emissione che consente un attacco dolce e la proiezione vocale."}, {"cat": "Voce e Disfonia", "front": "Come si ottiene la rotazione delle aritenoidi in terapia vocale?", "back": "Con lo sniffing e il colpo di glottide."}, {"cat": "Tirocinio 2026", "front": "Per stimolare la memoria di lavoro fonologica, cosa si utilizza?", "back": "Le non-parole: non essendo aiutate da un'etichetta lessicale, permettono di lavorare realmente sulla memoria e non sulla conoscenza pregressa."}, {"cat": "Tirocinio 2026", "front": "Quale tra queste è una causa di ritardo del linguaggio?", "back": "Esposizione a contesti poco stimolanti, sordità, disabilità cognitiva: tutte le precedenti (sono condizioni di varia natura che possono causare il ritardo)."}, {"cat": "Tirocinio 2026", "front": "Qual è il principale obiettivo del metodo PROMPT?", "back": "Trasformare i movimenti muscolari disorganizzati in parole parlate e frasi fluide, agendo direttamente sulla pianificazione motoria del linguaggio."}, {"cat": "Disfagia", "front": "Nella deglutizione fisiologica, quale struttura linguale deve poggiare sul palato?", "back": "I due terzi (2/3) del corpo linguale."}, {"cat": "Sviluppo del linguaggio", "front": "Quale funzione del linguaggio è principalmente compromessa nei disturbi pragmatici?", "back": "L'uso sociale del linguaggio."}, {"cat": "Sviluppo del linguaggio", "front": "Che cos'è la pragmatica (Doc. Tirocinio)?", "back": "È l'uso del linguaggio nei diversi contesti sociali."}, {"cat": "Valutazione e Test", "front": "In cosa si misura solitamente la velocità dell'eloquio?", "back": "In parole per minuto."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Quale tra questi è un prerequisito per l'apprendimento della lettura?", "back": "La consapevolezza fonologica."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Che cos'è la memoria visiva a lungo termine?", "back": "La capacità del cervello di immagazzinare e conservare per un tempo indefinito informazioni e ricordi sotto forma di immagini mentali."}, {"cat": "Valutazione e Test", "front": "Il test di screening per il linguaggio in età prescolare valuta principalmente cosa?", "back": "Le competenze lessicali e morfosintattiche."}, {"cat": "Sviluppo del linguaggio", "front": "In presenza di Disturbo Specifico di Linguaggio, cosa si osserva solitamente nella comprensione?", "back": "Spesso è preservata a fronte del deficit di produzione."}, {"cat": "Sviluppo del linguaggio", "front": "Qual è il ruolo del logopedista nella riabilitazione di un bambino con disturbo fonologico?", "back": "Potenziare la consapevolezza fonologica e la corretta articolazione."}, {"cat": "Sviluppo del linguaggio", "front": "Perché nella riabilitazione del disturbo fonologico non si deve indurre il bambino a parlare più velocemente?", "back": "Perché lavorare sulla velocità dell'eloquio non equivale a migliorare la capacità di sequenzializzare correttamente i fonemi: articolare (gesto motorio) è diverso da parlare (processo cognitivo-comunicativo completo)."}, {"cat": "DSA, Lettura e Metafonologia", "front": "Quale strumento è utile per valutare la consapevolezza fonologica del bambino in età scolare?", "back": "Prove di fusione e segmentazione fonemica."}, {"cat": "Valutazione e Test", "front": "Cosa si intende per oralità in logopedia?", "back": "L'insieme delle funzioni legate al cavo orale."}, {"cat": "Valutazione e Test", "front": "Che cos'è il Protocollo GIRBAS in ambito logopedico (risposta del docente)?", "back": "Una scheda di osservazione valutativa della voce e della postura muscolare, che comprende anche una valutazione percettiva."}, {"cat": "DSA, Lettura e Metafonologia", "front": "In caso di sospetta dislessia, perché è importante indagare le pregresse capacità metafonologiche?", "back": "Perché sono un prerequisito fondamentale per la lettura/scrittura (fusione e segmentazione per la conversione grafema-fonema); si valutano transcodifica, segmentazione, fusione, rime, sillaba, sillaba iniziale e manipolazione fonemica."}, {"cat": "Sviluppo del linguaggio", "front": "Cos'è il ritardo del linguaggio?", "back": "Condizione in cui il bambino sviluppa comprensione/produzione linguistica più lentamente dei coetanei ma seguendo le tappe evolutive normali; si definisce entro i 3 anni, con vocabolario ridotto (<50 parole a 24 mesi) e assenza di combinazione di 2 parole (24-30 mesi); prognosi spesso favorevole con recupero spontaneo entro i 4 anni."}, {"cat": "Sviluppo del linguaggio", "front": "Qual è la differenza tra ritardo del linguaggio e disturbo del linguaggio?", "back": "Il ritardo è una condizione temporanea con sviluppo più lento ma nella norma delle tappe, spesso risolta spontaneamente entro 3-4 anni. Il disturbo è persistente e strutturale (sviluppo atipico e alterato, es. gravi errori grammaticali, difficoltà di comprensione), non si risolve spontaneamente e richiede terapia logopedica; sotto i 3 anni si parla cautelativamente di ritardo, oltre i 4 anni se persiste si parla di disturbo."}, {"cat": "Laringectomia e Protesi Fonatoria", "front": "Nel paziente tracheostomizzato, la valvola fonatoria (es. Passy-Muir) permette cosa?", "back": "La fonazione: devia il flusso espiratorio verso le vie aeree superiori permettendo la produzione vocale."}, {"cat": "Deontologia e Normativa", "front": "Quale principio guida l'assistenza sanitaria?", "back": "La centralità della persona assistita."}, {"cat": "Valutazione e Test", "front": "Che cos'è la valutazione dinamica nel contesto logopedico?", "back": "Un approccio di valutazione basato sul paradigma test-intervento-retest, che analizza non solo la prestazione attuale ma il potenziale di apprendimento del paziente in risposta a un aiuto mirato (utile per distinguere ritardo da disturbo)."}, {"cat": "Valutazione e Test", "front": "Quali sono i tre parametri principali osservati nel Protocollo GIRBAS?", "back": "La voce, l'osservazione posturale-muscolare e la valutazione percettiva."}, {"cat": "Valutazione e Test", "front": "Cosa valuta il test TCGB?", "back": "Il livello morfosintattico in comprensione."}, {"cat": "Ipoacusia e Impianto Cocleare", "front": "In caso di ipoacusia congenita, cosa si intende per età uditiva?", "back": "Il tempo trascorso dalla protesizzazione ottimale."}, {"cat": "Ipoacusia e Impianto Cocleare", "front": "L'uso della protesi acustica controlaterale all'impianto cocleare va incoraggiato quando?", "back": "Solo nel caso in cui sia possibile rilevare la presenza di residui uditivi nell'orecchio non impiantato."}, {"cat": "Ipoacusia e Impianto Cocleare", "front": "Nella riabilitazione del bambino con ipoacusia, quanto è importante la collaborazione della famiglia?", "back": "È fondamentale in ogni fase del percorso riabilitativo."}, {"cat": "Fonetica e Fonologia", "front": "Cosa può caratterizzare un disordine del linguaggio espressivo di tipo fonologico?", "back": "La presenza sistematica di un errore su un suono (sostituzione/semplificazione ricorrente)."}, {"cat": "Sviluppo del linguaggio", "front": "Quando finiscono generalmente i processi di semplificazione fonologica?", "back": "Entro i 36 mesi."}, {"cat": "Valutazione e Test", "front": "Quando un target lessicale viene pronunciato nella stessa seduta in modo differente da cosa può dipendere?", "back": "Dal contesto fonologico in cui si trova il target (variabilità context-dependent)."}, {"cat": "Ipoacusia e Impianto Cocleare", "front": "Quali fattori influenzano l'outcome linguistico nei pazienti ipoacusici?", "back": "Età di insorgenza, gravità del deficit, tempestività della protesizzazione, aiuti familiari; con diagnosi precoce e impianto entro 18 mesi il bambino può apprendere il linguaggio in modo più spontaneo."}, {"cat": "Voce e Disfonia", "front": "Il controllo della contrazione miofunzionale nei pazienti disfonici durante l'emissione fonatoria deve riguardare quali distretti?", "back": "Il distretto toracico inferiore, il distretto toracico superiore e la zona sottomentoniera: tutti."}]</script>
+<script>
+
+(function(){
+"use strict";
+
+/* ---------------- Constants ---------------- */
+var LS_CARDS = "vm_cards_v1";
+var LS_STATS = "vm_stats_v1";
+var MIN = 60*1000, DAY = 24*60*60*1000;
+var DEFAULT_EF = 2.5;
+
+/* ---------------- Seed data ---------------- */
+var SEED = JSON.parse(document.getElementById("seed-cards").textContent);
+
+function uid(){ return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function freshState(seed){
+  return {
+    id: uid(),
+    cat: seed.cat,
+    front: seed.front,
+    back: seed.back,
+    custom: false,
+    ef: DEFAULT_EF,
+    interval: 0,
+    reps: 0,
+    lapses: 0,
+    due: Date.now(),
+    createdAt: Date.now()
+  };
+}
+
+/* ---------------- State load/save ---------------- */
+function loadCards(){
+  try{
+    var raw = localStorage.getItem(LS_CARDS);
+    if(raw){
+      var parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  }catch(e){}
+  var initial = SEED.map(freshState);
+  saveCards(initial);
+  return initial;
+}
+function saveCards(cards){
+  localStorage.setItem(LS_CARDS, JSON.stringify(cards));
+}
+
+function todayStr(d){
+  d = d || new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function loadStats(){
+  try{
+    var raw = localStorage.getItem(LS_STATS);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { streak:0, lastStudyDate:null, reviewLog:{} };
+}
+function saveStats(s){ localStorage.setItem(LS_STATS, JSON.stringify(s)); }
+
+var cards = loadCards();
+var stats = loadStats();
+
+/* ---------------- SRS logic ---------------- */
+function fmtInterval(ms){
+  if(ms < MIN) return "<1 min";
+  if(ms < 60*MIN){ var m = Math.round(ms/MIN); return m+" min"; }
+  if(ms < DAY){ var h = Math.round(ms/(60*MIN)); return h+" h"; }
+  var d = Math.round(ms/DAY);
+  if(d < 30) return d+" gg";
+  var mo = Math.round(d/30);
+  return mo+" mesi";
+}
+
+function previewDelays(card){
+  var isNew = card.interval < 1;
+  var out = {};
+  if(isNew){
+    out.again = MIN;
+    out.hard = 10*MIN;
+    out.good = 1*DAY;
+    out.easy = 3*DAY;
+  } else {
+    out.again = MIN;
+    out.hard = Math.max(1, Math.round(card.interval*1.2))*DAY;
+    out.good = Math.max(1, Math.round(card.interval*card.ef))*DAY;
+    out.easy = Math.max(1, Math.round(card.interval*card.ef*1.3))*DAY;
+  }
+  return out;
+}
+
+function applyRating(card, rating){
+  // rating: 0 again, 1 hard, 2 good, 3 easy
+  var isNew = card.interval < 1;
+  var now = Date.now();
+  if(rating === 0){
+    card.lapses += 1;
+    card.reps = 0;
+    card.interval = 0;
+    card.ef = Math.max(1.3, card.ef - 0.2);
+    card.due = now + MIN;
+  } else if(rating === 1){
+    card.ef = Math.max(1.3, card.ef - 0.15);
+    if(isNew){
+      card.due = now + 10*MIN;
+    } else {
+      card.interval = Math.max(1, Math.round(card.interval*1.2));
+      card.due = now + card.interval*DAY;
+      card.reps += 1;
+    }
+  } else if(rating === 2){
+    if(isNew){
+      card.interval = 1;
+      card.reps = 1;
+      card.due = now + 1*DAY;
+    } else {
+      card.interval = Math.max(1, Math.round(card.interval*card.ef));
+      card.reps += 1;
+      card.due = now + card.interval*DAY;
+    }
+  } else if(rating === 3){
+    card.ef = card.ef + 0.15;
+    if(isNew){
+      card.interval = 3;
+      card.reps = 1;
+      card.due = now + 3*DAY;
+    } else {
+      card.interval = Math.max(1, Math.round(card.interval*card.ef*1.3));
+      card.reps += 1;
+      card.due = now + card.interval*DAY;
+    }
+  }
+  return card;
+}
+
+function logReview(){
+  var t = todayStr();
+  stats.reviewLog[t] = (stats.reviewLog[t]||0) + 1;
+  if(stats.lastStudyDate !== t){
+    var yesterday = todayStr(new Date(Date.now()-DAY));
+    if(stats.lastStudyDate === yesterday){
+      stats.streak = (stats.streak||0) + 1;
+    } else {
+      stats.streak = 1;
+    }
+    stats.lastStudyDate = t;
+  }
+  saveStats(stats);
+}
+
+function endOfToday(){
+  var d = new Date();
+  d.setHours(23,59,59,999);
+  return d.getTime();
+}
+
+function isMastered(card){
+  return card.interval >= 21;
+}
+
+/* ---------------- Categories ---------------- */
+function getCategories(){
+  var set = {};
+  cards.forEach(function(c){ set[c.cat] = true; });
+  return Object.keys(set).sort(function(a,b){ return a.localeCompare(b,"it"); });
+}
+
+/* ---------------- DOM refs ---------------- */
+var $ = function(id){ return document.getElementById(id); };
+var chipsRow = $("chipsRow");
+var chipsRowManage = $("chipsRowManage");
+var studyCounter = $("studyCounter");
+var aheadToggle = $("aheadToggle");
+var emptyState = $("emptyState");
+var cardWrap = $("cardWrap");
+var flashcard = $("flashcard");
+var tagFront = $("tagFront"), textFront = $("textFront");
+var tagBack = $("tagBack"), textBack = $("textBack");
+var rateRow = $("rateRow");
+var subAgain = $("subAgain"), subHard = $("subHard"), subGood = $("subGood"), subEasy = $("subEasy");
+var streakCountEl = $("streakCount");
+
+var activeCat = "Tutte";
+var activeCatManage = "Tutte";
+var aheadMode = false;
+var currentQueue = [];
+var currentCard = null;
+var isFlipped = false;
+var isBusy = false;
+
+/* ---------------- Chips ---------------- */
+function renderChips(){
+  var cats = getCategories();
+  var counts = {};
+  var now = endOfToday();
+  cards.forEach(function(c){
+    var due = aheadMode ? true : c.due <= now;
+    if(due) counts[c.cat] = (counts[c.cat]||0)+1;
+  });
+  var totalDue = 0;
+  Object.keys(counts).forEach(function(k){ totalDue += counts[k]; });
+
+  function build(container, active, onPick, withCounts){
+    container.innerHTML = "";
+    var all = document.createElement("button");
+    all.className = "chip" + (active==="Tutte" ? " chip-active":"");
+    all.type="button";
+    all.innerHTML = "Tutte" + (withCounts ? ' <span class="chip-count">'+ (withCounts===2? cards.length : totalDue) +'</span>' : "");
+    all.onclick = function(){ onPick("Tutte"); };
+    container.appendChild(all);
+    cats.forEach(function(cat){
+      var b = document.createElement("button");
+      b.className = "chip" + (active===cat ? " chip-active":"");
+      b.type="button";
+      var c = withCounts===2 ? cards.filter(function(x){return x.cat===cat;}).length : (counts[cat]||0);
+      b.innerHTML = escapeHtml(cat) + (withCounts ? ' <span class="chip-count">'+c+'</span>' : "");
+      b.onclick = function(){ onPick(cat); };
+      container.appendChild(b);
+    });
+  }
+  build(chipsRow, activeCat, function(c){ activeCat = c; refreshStudy(); }, 1);
+  build(chipsRowManage, activeCatManage, function(c){ activeCatManage = c; renderManageList(); }, 2);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+
+/* ---------------- Study queue ---------------- */
+function buildQueue(){
+  var now = endOfToday();
+  var pool = cards.filter(function(c){
+    if(activeCat !== "Tutte" && c.cat !== activeCat) return false;
+    return aheadMode ? true : c.due <= now;
+  });
+  pool.sort(function(a,b){ return a.due - b.due; });
+  return pool;
+}
+
+function refreshStudy(){
+  currentQueue = buildQueue();
+  renderChips();
+  updateStudyMeta();
+  nextCard(true);
+}
+
+function updateStudyMeta(){
+  var n = currentQueue.length;
+  studyCounter.textContent = n===0 ? "Nessuna carta da ripassare" :
+    (n + (n===1 ? " carta da ripassare" : " carte da ripassare"));
+}
+
+function nextCard(skipAnim){
+  isFlipped = false;
+  rateRow.hidden = true;
+  if(currentQueue.length === 0){
+    currentCard = null;
+    cardWrap.style.display = "none";
+    emptyState.hidden = false;
+    return;
+  }
+  emptyState.hidden = true;
+  cardWrap.style.display = "";
+  currentCard = currentQueue[0];
+  tagFront.textContent = currentCard.cat;
+  tagBack.textContent = currentCard.cat;
+  textFront.textContent = currentCard.front;
+  textBack.textContent = currentCard.back;
+  flashcard.classList.remove("flipped","leaving-left","leaving-right");
+  if(!skipAnim){
+    flashcard.classList.add("entering");
+    setTimeout(function(){ flashcard.classList.remove("entering"); }, 320);
+  }
+  var delays = previewDelays(currentCard);
+  subAgain.textContent = fmtInterval(delays.again);
+  subHard.textContent = fmtInterval(delays.hard);
+  subGood.textContent = fmtInterval(delays.good);
+  subEasy.textContent = fmtInterval(delays.easy);
+}
+
+function doFlip(){
+  if(!currentCard || isBusy) return;
+  isFlipped = !isFlipped;
+  flashcard.classList.toggle("flipped", isFlipped);
+  rateRow.hidden = !isFlipped;
+}
+
+function rate(r){
+  if(!currentCard || isBusy) return;
+  isBusy = true;
+  applyRating(currentCard, r);
+  saveCards(cards);
+  logReview();
+  updateStreakUI();
+
+  var leaveClass = (r===0) ? "leaving-left" : (r>=2 ? "leaving-right" : "leaving-left");
+  flashcard.classList.add(leaveClass);
+
+  setTimeout(function(){
+    currentQueue = buildQueue();
+    updateStudyMeta();
+    renderChips();
+    nextCard(false);
+    isBusy = false;
+  }, 260);
+}
+
+/* ---------------- Card tap / swipe ---------------- */
+var touchStartX=0, touchStartY=0, touchDX=0, touchMoved=false;
+flashcard.addEventListener("click", function(e){
+  if(touchMoved) return;
+  doFlip();
+});
+flashcard.addEventListener("touchstart", function(e){
+  var t = e.touches[0];
+  touchStartX = t.clientX; touchStartY = t.clientY; touchDX = 0; touchMoved = false;
+}, {passive:true});
+flashcard.addEventListener("touchmove", function(e){
+  var t = e.touches[0];
+  touchDX = t.clientX - touchStartX;
+  var dy = t.clientY - touchStartY;
+  if(Math.abs(touchDX) > 12 && Math.abs(touchDX) > Math.abs(dy)) touchMoved = true;
+}, {passive:true});
+flashcard.addEventListener("touchend", function(e){
+  if(touchMoved && Math.abs(touchDX) > 60){
+    doFlip();
+  }
+  touchMoved=false;
+}, {passive:true});
+
+document.addEventListener("keydown", function(e){
+  if(!document.getElementById("view-study").classList.contains("view-active")) return;
+  if(document.activeElement && (document.activeElement.tagName==="INPUT"||document.activeElement.tagName==="TEXTAREA")) return;
+  if(e.code === "Space"){ e.preventDefault(); doFlip(); }
+  if(isFlipped && ["1","2","3","4"].indexOf(e.key)>-1){
+    rate(parseInt(e.key,10)-1);
+  }
+});
+
+Array.prototype.slice.call(document.querySelectorAll(".rate-btn")).forEach(function(btn){
+  btn.addEventListener("click", function(){ rate(parseInt(btn.getAttribute("data-rate"),10)); });
+});
+
+aheadToggle.addEventListener("click", function(){
+  aheadMode = !aheadMode;
+  aheadToggle.classList.toggle("link-on", aheadMode);
+  aheadToggle.textContent = aheadMode ? "Solo carte in scadenza" : "Studia in anticipo";
+  refreshStudy();
+});
+
+/* ---------------- Streak / stats UI ---------------- */
+function updateStreakUI(){
+  var s = stats.streak || 0;
+  var today = todayStr();
+  var yesterday = todayStr(new Date(Date.now()-DAY));
+  if(stats.lastStudyDate !== today && stats.lastStudyDate !== yesterday){
+    s = 0;
+  }
+  streakCountEl.textContent = s;
+}
+
+function renderStats(){
+  var now = endOfToday();
+  var due = cards.filter(function(c){ return c.due <= now; }).length;
+  var mastered = cards.filter(isMastered).length;
+  var today = todayStr();
+  var reviewsToday = stats.reviewLog[today] || 0;
+
+  $("statDueToday").textContent = due;
+  $("statMastered").textContent = mastered;
+  $("statStreak").textContent = (stats.lastStudyDate===today || stats.lastStudyDate===todayStr(new Date(Date.now()-DAY))) ? (stats.streak||0) : 0;
+  $("statReviewsToday").textContent = reviewsToday;
+
+  var cats = getCategories();
+  var wrap = $("catBars");
+  wrap.innerHTML = "";
+  cats.forEach(function(cat){
+    var list = cards.filter(function(c){ return c.cat===cat; });
+    var mast = list.filter(isMastered).length;
+    var pct = list.length ? Math.round(100*mast/list.length) : 0;
+    var item = document.createElement("div");
+    item.className = "cat-bar-item";
+    item.innerHTML =
+      '<div class="cat-bar-top"><span class="cat-name">'+escapeHtml(cat)+'</span>'+
+      '<span class="cat-frac">'+mast+' / '+list.length+'</span></div>'+
+      '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:'+pct+'%"></div></div>';
+    wrap.appendChild(item);
+  });
+}
+
+$("resetProgressBtn").addEventListener("click", function(){
+  if(!confirm("Reimpostare tutti i progressi di ripasso? Le carte torneranno tutte 'nuove'. I contenuti non verranno eliminati.")) return;
+  cards.forEach(function(c){
+    c.ef = DEFAULT_EF; c.interval = 0; c.reps = 0; c.lapses = 0; c.due = Date.now();
+  });
+  saveCards(cards);
+  stats = { streak:0, lastStudyDate:null, reviewLog:{} };
+  saveStats(stats);
+  updateStreakUI();
+  refreshStudy();
+  renderStats();
+  showToast("Progressi reimpostati");
+});
+
+/* ---------------- Manage view ---------------- */
+var cardListEl = $("cardList");
+var searchInput = $("searchInput");
+
+function renderManageList(){
+  var q = (searchInput.value||"").trim().toLowerCase();
+  var list = cards.filter(function(c){
+    if(activeCatManage!=="Tutte" && c.cat!==activeCatManage) return false;
+    if(q && c.front.toLowerCase().indexOf(q)<0 && c.back.toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+  list.sort(function(a,b){ return b.createdAt - a.createdAt; });
+  cardListEl.innerHTML = "";
+  if(list.length===0){
+    cardListEl.innerHTML = '<div class="no-results">Nessuna carta trovata.</div>';
+    return;
+  }
+  list.forEach(function(c){
+    var item = document.createElement("div");
+    item.className = "card-item";
+    var statusTxt = isMastered(c) ? "padroneggiata" : (c.interval>0 ? "in ripasso" : "nuova");
+    item.innerHTML =
+      '<div class="card-item-top"><span class="card-item-front"></span><span class="card-item-tag"></span></div>'+
+      '<div class="card-item-back"></div>'+
+      '<div class="card-item-meta"></div>';
+    item.querySelector(".card-item-front").textContent = c.front;
+    item.querySelector(".card-item-tag").textContent = c.cat;
+    item.querySelector(".card-item-back").textContent = c.back;
+    item.querySelector(".card-item-meta").textContent = statusTxt + (c.custom ? " · personale" : "");
+    item.addEventListener("click", function(){ openModal(c); });
+    cardListEl.appendChild(item);
+  });
+}
+searchInput.addEventListener("input", renderManageList);
+
+/* ---------------- Modal (add/edit) ---------------- */
+var modalOverlay = $("modalOverlay");
+var modalTitle = $("modalTitle");
+var cardForm = $("cardForm");
+var fieldFront = $("fieldFront"), fieldBack = $("fieldBack"), fieldCat = $("fieldCat");
+var modalDelete = $("modalDelete");
+var modalCancel = $("modalCancel");
+var editingId = null;
+
+function refreshCatList(){
+  var dl = $("catList");
+  dl.innerHTML = "";
+  getCategories().forEach(function(cat){
+    var opt = document.createElement("option");
+    opt.value = cat;
+    dl.appendChild(opt);
+  });
+}
+
+function openModal(card){
+  refreshCatList();
+  if(card){
+    editingId = card.id;
+    modalTitle.textContent = "Modifica carta";
+    fieldFront.value = card.front;
+    fieldBack.value = card.back;
+    fieldCat.value = card.cat;
+    modalDelete.hidden = false;
+  } else {
+    editingId = null;
+    modalTitle.textContent = "Nuova carta";
+    fieldFront.value = "";
+    fieldBack.value = "";
+    fieldCat.value = activeCatManage!=="Tutte" ? activeCatManage : "";
+    modalDelete.hidden = true;
+  }
+  modalOverlay.classList.add("modal-open");
+  setTimeout(function(){ fieldFront.focus(); }, 250);
+}
+function closeModal(){
+  modalOverlay.classList.remove("modal-open");
+  editingId = null;
+}
+modalCancel.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", function(e){ if(e.target===modalOverlay) closeModal(); });
+
+cardForm.addEventListener("submit", function(e){
+  e.preventDefault();
+  var front = fieldFront.value.trim();
+  var back = fieldBack.value.trim();
+  var cat = fieldCat.value.trim();
+  if(!front || !back || !cat) return;
+
+  if(editingId){
+    var c = cards.find(function(x){ return x.id===editingId; });
+    if(c){ c.front = front; c.back = back; c.cat = cat; }
+    showToast("Carta aggiornata");
+  } else {
+    var nc = freshState({cat:cat, front:front, back:back});
+    nc.custom = true;
+    cards.push(nc);
+    showToast("Carta aggiunta");
+  }
+  saveCards(cards);
+  closeModal();
+  renderChips();
+  renderManageList();
+  renderStats();
+  refreshStudy();
+});
+
+modalDelete.addEventListener("click", function(){
+  if(!editingId) return;
+  if(!confirm("Eliminare definitivamente questa carta?")) return;
+  cards = cards.filter(function(x){ return x.id!==editingId; });
+  saveCards(cards);
+  closeModal();
+  renderChips();
+  renderManageList();
+  renderStats();
+  refreshStudy();
+  showToast("Carta eliminata");
+});
+
+$("fabAdd").addEventListener("click", function(){ openModal(null); });
+
+/* ---------------- Toast ---------------- */
+var toastEl = $("toast");
+var toastTimer = null;
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("toast-show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove("toast-show"); }, 1800);
+}
+
+/* ---------------- Nav ---------------- */
+var navBtns = Array.prototype.slice.call(document.querySelectorAll(".nav-btn"));
+var fab = $("fabAdd");
+navBtns.forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var target = btn.getAttribute("data-view");
+    navBtns.forEach(function(b){ b.classList.toggle("nav-active", b===btn); });
+    Array.prototype.slice.call(document.querySelectorAll(".view")).forEach(function(v){
+      v.classList.toggle("view-active", v.id===target);
+    });
+    fab.classList.toggle("fab-visible", target==="view-manage");
+    if(target==="view-stats") renderStats();
+    if(target==="view-manage") renderManageList();
+    if(target==="view-study") refreshStudy();
+    window.scrollTo(0,0);
+  });
+});
+
+/* ---------------- Splash screen ---------------- */
+(function initSplash(){
+  var splash = $("splash");
+  var heartsWrap = $("splashHearts");
+  var swipeBtn = $("splashSwipe");
+  if(!splash) return;
+  var HEART_COLORS = ["#4ECDC4", "#FF6F59", "#F2C14E"];
+  var dismissed = false;
+
+  function spawnHearts(count){
+    var w = window.innerWidth;
+    for(var i=0;i<count;i++){
+      (function(){
+        var el = document.createElement("span");
+        el.className = "heart-particle";
+        el.textContent = "\u2665";
+        var size = 14 + Math.random()*22;
+        var left = Math.random()*100;
+        var drift = (Math.random()*120 - 60);
+        var dur = 2.6 + Math.random()*2.2;
+        var delay = Math.random()*0.5;
+        var opacity = 0.55 + Math.random()*0.4;
+        var rot = (Math.random()*50 - 25);
+        var color = HEART_COLORS[i % HEART_COLORS.length];
+        el.style.left = left + "%";
+        el.style.fontSize = size + "px";
+        el.style.color = color;
+        el.style.setProperty("--drift", drift+"px");
+        el.style.setProperty("--s", (0.8 + Math.random()*0.6).toFixed(2));
+        el.style.setProperty("--o", opacity.toFixed(2));
+        el.style.setProperty("--rot", rot+"deg");
+        el.style.animationDuration = dur+"s";
+        el.style.animationDelay = delay+"s";
+        heartsWrap.appendChild(el);
+        setTimeout(function(){ el.remove(); }, (dur+delay+0.3)*1000);
+      })();
+    }
+  }
+
+  function enterApp(){
+    if(dismissed) return;
+    dismissed = true;
+    spawnHearts(28);
+    setTimeout(function(){
+      spawnHearts(14);
+    }, 220);
+    splash.classList.add("splash-leaving");
+    setTimeout(function(){
+      splash.style.display = "none";
+    }, 560);
+  }
+
+  var startY = 0, tracking = false;
+  splash.addEventListener("touchstart", function(e){
+    startY = e.touches[0].clientY;
+    tracking = true;
+  }, {passive:true});
+  splash.addEventListener("touchmove", function(e){
+    if(!tracking) return;
+    var dy = startY - e.touches[0].clientY;
+    if(dy > 46){
+      tracking = false;
+      enterApp();
+    }
+  }, {passive:true});
+  splash.addEventListener("touchend", function(){ tracking = false; }, {passive:true});
+
+  swipeBtn.addEventListener("click", enterApp);
+
+  document.addEventListener("keydown", function(e){
+    if(splash.style.display === "none") return;
+    if(e.code === "Space" || e.code === "Enter" || e.code === "ArrowUp"){
+      enterApp();
+    }
+  });
+})();
+
+/* ---------------- Init ---------------- */
+function init(){
+  updateStreakUI();
+  renderChips();
+  refreshStudy();
+  renderStats();
+  renderManageList();
+}
+init();
+
+/* ---------------- PWA: manifest blob + service worker ---------------- */
+try{
+  fetch("manifest.json").then(function(r){
+    if(!r.ok) throw new Error("no manifest file");
+  }).catch(function(){
+    // Fallback: build manifest as blob if manifest.json isn't reachable (e.g. sandboxed preview)
+    var manifest = {
+      name: "Ripasso Logopedia",
+      short_name: "Ripasso Logopedia",
+      start_url: "./index.html",
+      scope: "./",
+      display: "standalone",
+      background_color: "#12151A",
+      theme_color: "#12151A",
+      lang: "it",
+      icons: []
+    };
+    var blob = new Blob([JSON.stringify(manifest)], {type:"application/json"});
+    document.getElementById("manifest-link").setAttribute("href", URL.createObjectURL(blob));
+  });
+}catch(e){}
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){ /* offline shell not available in this context */ });
+  });
+}
+
+})();
+
+</script>
+</body>
+</html>
