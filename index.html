@@ -301,6 +301,7 @@ input, textarea { user-select:text; -webkit-user-select:text; }
   text-align:center; gap:10px; padding: 40px 20px;
   color: var(--text-dim);
 }
+.empty-state[hidden]{ display:none; }
 .empty-wave{ display:flex; gap:6px; align-items:flex-end; height:40px; margin-bottom:8px; }
 .empty-wave span{
   width:6px; border-radius:4px; background: var(--voce); opacity:0.55;
@@ -320,6 +321,7 @@ input, textarea { user-select:text; -webkit-user-select:text; }
   display:grid; grid-template-columns: repeat(2,1fr); gap:8px;
   margin-top:16px;
 }
+.rate-row[hidden]{ display:none; }
 .rate-btn{
   display:flex; flex-direction:column; align-items:center; gap:3px;
   padding: 14px 4px 12px;
