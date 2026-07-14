@@ -492,6 +492,188 @@ input, textarea { user-select:text; -webkit-user-select:text; }
 }
 .btn-ghost.danger{ color: var(--corallo); border-color: rgba(255,111,89,0.4); }
 
+/* ---------- QUIZ ---------- */
+.quiz-sections{
+  display:flex; gap:8px; overflow-x:auto;
+  padding: 4px 2px 14px;
+  scrollbar-width:none;
+}
+.quiz-sections::-webkit-scrollbar{ display:none; }
+.quiz-section-btn{
+  flex-shrink:0;
+  padding:9px 16px;
+  border-radius:100px;
+  background: var(--ink-3);
+  border:1px solid var(--border);
+  color: var(--text-dim);
+  font-size:13px; font-weight:600;
+  white-space:nowrap; cursor:pointer;
+  font-family: var(--font-body);
+}
+.quiz-section-btn.qs-active{
+  background: var(--voce);
+  color: #0A1513;
+  border-color: var(--voce);
+}
+
+.quiz-progress{
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:16px;
+  font-size:12.5px; color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.quiz-progress-bar{
+  flex:1; height:6px; background: var(--ink-3); border-radius:100px; overflow:hidden;
+}
+.quiz-progress-fill{
+  height:100%; background: linear-gradient(90deg, var(--voce-dim), var(--voce));
+  border-radius:100px; transition: width .3s ease;
+}
+
+.quiz-card{
+  background: linear-gradient(160deg, var(--ink-3) 0%, var(--ink-2) 100%);
+  border:1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  padding: 24px 22px;
+  box-shadow: 0 18px 40px -18px rgba(0,0,0,0.6);
+}
+.quiz-q-num{
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--voce);
+  background: rgba(78,205,196,0.12);
+  border:1px solid rgba(78,205,196,0.3);
+  padding: 5px 10px;
+  border-radius: 100px;
+  margin-bottom: 16px;
+  display:inline-block;
+}
+.quiz-q-text{
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.42;
+  margin: 0 0 20px;
+}
+.quiz-options{ display:flex; flex-direction:column; gap:8px; }
+.quiz-option{
+  display:flex; align-items:center; gap:10px;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  border:1px solid var(--border-2);
+  background: var(--ink-3);
+  color: var(--text);
+  font-size:14px; line-height:1.4;
+  cursor:pointer; font-family: var(--font-body);
+  text-align:left;
+  transition: background .18s ease, border-color .18s ease;
+}
+.quiz-option:active{ transform: scale(0.98); }
+.quiz-option .qo-letter{
+  flex-shrink:0;
+  width:26px; height:26px; border-radius:50%;
+  border:1.5px solid var(--border-2);
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-size:12px; font-weight:700;
+  color: var(--text-dim);
+}
+.quiz-option.qo-selected{
+  border-color: var(--voce);
+  background: rgba(78,205,196,0.1);
+}
+.quiz-option.qo-selected .qo-letter{
+  border-color: var(--voce); color: var(--voce); background: rgba(78,205,196,0.15);
+}
+.quiz-option.qo-correct{
+  border-color: var(--voce);
+  background: rgba(78,205,196,0.18);
+}
+.quiz-option.qo-correct .qo-letter{
+  border-color: var(--voce); background: var(--voce); color: #0A1513;
+}
+.quiz-option.qo-wrong{
+  border-color: var(--corallo);
+  background: rgba(255,111,89,0.12);
+}
+.quiz-option.qo-wrong .qo-letter{
+  border-color: var(--corallo); background: var(--corallo); color: #1A0E0B;
+}
+.quiz-option.qo-disabled{ pointer-events:none; opacity:0.5; }
+.quiz-option.qo-correct, .quiz-option.qo-wrong{ opacity:1; }
+
+.quiz-feedback{
+  margin-top:16px;
+  padding:14px 16px;
+  border-radius: var(--radius-md);
+  font-size:13.5px; line-height:1.5;
+  display:none;
+}
+.quiz-feedback.fb-show{ display:block; animation: fadeUp .25s ease; }
+.quiz-feedback.fb-correct{
+  background: rgba(78,205,196,0.12);
+  border:1px solid rgba(78,205,196,0.3);
+  color: var(--voce);
+}
+.quiz-feedback.fb-wrong{
+  background: rgba(255,111,89,0.1);
+  border:1px solid rgba(255,111,89,0.3);
+  color: var(--corallo);
+}
+.quiz-feedback-title{ font-weight:700; margin-bottom:4px; }
+.quiz-feedback-answer{ color: var(--text); font-size:13px; }
+
+.quiz-open-answer{
+  margin-top:16px;
+  padding:14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(78,205,196,0.08);
+  border:1px solid rgba(78,205,196,0.25);
+  font-size:13.5px; line-height:1.55;
+  color: var(--text);
+  display:none;
+}
+.quiz-open-answer.oa-show{ display:block; animation: fadeUp .25s ease; }
+.quiz-open-answer-title{
+  font-family: var(--font-mono); font-size:11px; text-transform:uppercase;
+  letter-spacing:0.06em; color: var(--voce); margin-bottom:8px;
+}
+
+.quiz-nav{
+  display:flex; gap:8px; margin-top:18px;
+}
+.quiz-nav-btn{
+  flex:1; padding:13px; border-radius: var(--radius-md);
+  border:1px solid var(--border-2); background: var(--ink-3);
+  color: var(--text); font-size:14px; font-weight:600;
+  cursor:pointer; font-family: var(--font-body);
+}
+.quiz-nav-btn:active{ transform: scale(0.97); }
+.quiz-nav-btn.qn-primary{
+  background: var(--voce); color:#0A1513; border-color: var(--voce);
+}
+.quiz-nav-btn:disabled{ opacity:0.35; pointer-events:none; }
+
+.quiz-results{
+  text-align:center; padding: 30px 20px;
+}
+.quiz-results-score{
+  font-family: var(--font-display); font-size: 42px; color: var(--voce);
+  margin: 8px 0 4px;
+}
+.quiz-results-label{ font-size:14px; color: var(--text-dim); margin-bottom:24px; }
+.quiz-results-row{
+  display:flex; justify-content:center; gap:24px; margin-bottom:24px;
+  font-size:13px; color: var(--text-dim); font-family: var(--font-mono);
+}
+.quiz-results-row span{ color: var(--text); font-weight:700; }
+.quiz-results-restart{
+  background: var(--voce); color:#0A1513; border:none;
+  border-radius: var(--radius-md); padding: 14px 28px;
+  font-size:14.5px; font-weight:700; cursor:pointer;
+  font-family: var(--font-body);
+}
+
 /* ---------- TOAST ---------- */
 .toast{
   position:fixed; left:50%; bottom: calc(96px + var(--safe-bottom));
@@ -648,7 +830,13 @@ input, textarea { user-select:text; -webkit-user-select:text; }
 
     <section id="view-quiz" class="view">
       <h1 class="view-title">Quiz</h1>
-      <p class="no-results" id="quizPlaceholder">Le domande a risposta multipla appariranno qui.</p>
+      <div class="quiz-sections" id="quizSections"></div>
+      <div class="quiz-progress" id="quizProgress" style="display:none;">
+        <span id="quizCounter">1 / 15</span>
+        <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgressFill" style="width:0%"></div></div>
+        <span id="quizScore">0</span>
+      </div>
+      <div id="quizContainer"></div>
     </section>
 
   </main>
@@ -1156,9 +1344,241 @@ $("resetProgressBtn").addEventListener("click", function(){
 var cardListEl = $("cardList");
 var searchInput = $("searchInput");
 
+/* ---------------- Quiz data: Villari ---------------- */
+var VILLARI_QUIZ = [
+  { q:"I bambini con diagnosi di DSL sono caratterizzati frequentemente da:", o:["un ritardo globale psicomotorio","marcata labilità attentiva","ritardo nelle acquisizioni linguistiche","tutte le precedenti"], a:3 },
+  { q:"La valutazione funzionale realizzata dal logopedista consiste:", o:["nella somministrazione del bilancio fonetico","nel rilievo dei parametri psicoacustici della voce","le due precedenti","nella valutazione del Q.I."], a:0 },
+  { q:"I soggetti affetti da alterazioni delle funzioni orali frequentemente presentano:", o:["respirazione orale","respirazione nasale","difficoltà di linguaggio","nessuna delle precedenti"], a:0 },
+  { q:"Nel caso di un paziente che non comunica verbalmente si deve osservare:", o:["le capacità di interazione in un contesto ludico","la congruità di quanto comunicato in modo extraverbale","le precedenti","la maturazione fonetico-fonologica"], a:2 },
+  { q:"Le procedure di bilancio nella disfagia è un atto professionale che spetta:", o:["all'otorinolaringoiatra","al chirurgo maxillo-facciale","al logopedista","nessuno dei precedenti"], a:2 },
+  { q:"La frequente omissione dei verbi nel linguaggio di un bambino con DSL segnala:", o:["una difficoltà morfo-sintattica","un deficit lessicale specifico","un'alterazione morfologica","una difficoltà di natura semantico-lessicale"], a:0 },
+  { q:"Il fono è l'unità minima della fonetica:", o:["è un elemento sonoro che differenzia il significato","è un elemento sonoro che non differenzia il significato","nessuna delle precedenti"], a:1 },
+  { q:"Il codice 'Prossemico' si riferisce:", o:["alla posizione degli interlocutori","al contenuto della comunicazione","alla mimica gestuale associata alla verbalità"], a:0 },
+  { q:"La disprassia è:", o:["un disturbo del cammino","un disturbo dell'esecuzione di un gesto intenzionale","nessuna delle precedenti"], a:1 },
+  { q:"La terapia logopedica dell'ipoacusico secondo il Metodo Verbo-Tonale:", o:["prevede il macro-movimento corporeo","non prevede il macro-movimento corporeo","nessuna delle precedenti"], a:0 },
+  { q:"L'apprendimento, inteso come processo psicologico, è stato studiato attraverso:", o:["il Condizionamento Classico","il Condizionamento Operante","entrambe le precedenti"], a:2 },
+  { q:"Il piano di trattamento per un paziente affetto da paralisi cordale bilaterale prevede:", o:["emissioni sonore sostenute","colpi di tosse ripetuti in numero crescente","nessuna delle due","entrambe le procedure"], a:3 },
+  { q:"L'esame delle prassie verbali ha lo scopo principale di:", o:["valutare le capacità verbali dei soggetti","limitare le interferenze funzionali orali","segnalare problemi prassici che inficiano la produzione linguistica","nessuna delle precedenti"], a:2 },
+  { q:"L'impostazione del meccanismo respiratorio in un soggetto disfonico viene generalmente realizzata affinché il soggetto:", o:["impari il meccanismo a riposo","acquisca gli elementi utili al controllo inspiratorio","apprenda il controllo dell'intero ciclo respiratorio","controlli la durata espiratoria"], a:2 },
+  { q:"Le prove di denominazione di immagini prevedono:", o:["la capacità di produrre i foni","esaustive abilità lessicali","memoria a breve termine adeguata","tutte le precedenti"], a:3 },
+  { q:"Quali sono gli indizi di rischio nel primo sviluppo del linguaggio?", type:"open",
+    open:"Gli indici di rischio nel primo sviluppo del linguaggio sono:\n• assenza o ridotta produzione di gesti comunicativi;\n• scarso contatto oculare e difficoltà nell'interazione comunicativa;\n• assenza di lallazione o vocalizzazioni ridotte;\n• vocabolario povero rispetto all'età;\n• difficoltà nella comprensione linguistica;\n• mancata comparsa delle prime parole entro i tempi attesi;\n• difficoltà nella combinazione di parole." },
+  { q:"Il PVB:", o:["È un'osservazione strutturata","È un questionario per i genitori (8-36 mesi)","È un questionario su gesti e parole/frasi (8-30 mesi)","È un test (8-36 mesi)","È un test (12-36 mesi)"], a:1 },
+  { q:"È importante valutare la comprensione lessicale attraverso il test:", o:["Raven","Peabody","TPL","Bus Story Test","ACPM"], a:1 },
+  { q:"Per quale motivo? (Riferito al test Peabody)", type:"open",
+    open:"Il Peabody valuta la comprensione lessicale attraverso il riconoscimento di immagini associate a parole pronunciate dall'esaminatore. È utile perché permette di valutare il vocabolario recettivo anche quando la produzione verbale è ridotta." },
+  { q:"Nel disturbo fonetico-fonologico:", o:["È possibile riscontrare errori di sistema","È possibile riscontrare errori di struttura","È possibile riscontrare errori di sistema e di struttura","Errori di struttura e difficoltà di comprensione lessicale","Errori di struttura e difficoltà di comprensione morfosintattica"], a:2 },
+  { q:"Se un bambino ottiene il punteggio Z = -0,8 deviazioni standard:", o:["Fascia di disturbo (intervento immediato)","Fascia di disturbo (richiesta di attenzione)","Fascia di attenzione","Fascia di attenzione (intervento immediato)","Fascia della norma"], a:4 },
+  { q:"La balbuzie tonica:", o:["Stato tensivo, vocalizzazione e gestualità","Stato tensivo e gestualità","Ripetizione coatta all'inizio/durante la frase","A + B","Ripetizione spasmodica di una sillaba"], a:3 },
+  { q:"Disprassia è:", o:["Disturbo della parola per malformazione","Disturbo neurologico della scrittura","Incapacità di leggere e comprendere","Alterazione della capacità di compiere un movimento volontario","Incapacità di comprendere simboli numerici"], a:3 },
+  { q:"Che cosa sono le mappe concettuali?", o:["Misure dispensative","Strumenti compensativi e misure dispensative","Strumenti compensativi","Nessuna risposta è corretta"], a:2 },
+  { q:"La consapevolezza fonologica globale riguarda le operazioni metafonologiche relative a quali capacità?", o:["Discriminazione di suoni, classificazione, fusione e segmentazione","Fusione e segmentazione, manipolazione, classificazione","Manipolazione, classificazione, discriminazione di suoni","Classificazione, fusione e segmentazione"], a:0 },
+  { q:"Quali interventi bisogna adottare per il recupero e/o potenziamento della lettura?", o:["Utilizzo del tachistoscopio","Sviluppo dell'attenzione e della memoria di lavoro","Sviluppo delle competenze metafonologiche","Tutte le risposte sono corrette"], a:3 },
+  { q:"Come si calcola il punteggio Z nel caso del parametro Velocità di lettura (T)?", o:["(M − DS) / T","(DS − M) / T","(M − T) / DS","(T − M) / DS"], a:3 },
+  { q:"Nelle logopatie il trattamento indiretto è da considerarsi:", o:["Talvolta utile","Sempre necessario","Mai necessario","Nessuna delle precedenti"], a:0 },
+  { q:"Le prove di denominazione di immagini prevedono:", o:["La capacità di produrre i foni","Esaustive abilità lessicali","Memoria a breve termine adeguata","Tutte le precedenti"], a:3 },
+  { q:"Durante il primo approccio con un bambino con difficoltà comunicative:", o:["Si somministrano test verbali","Si valuta il linguaggio espressivo","Si valuta l'interazione comunicativa","Nessuna delle precedenti"], a:2 },
+  { q:"Nell'ambito dello sviluppo fisiologico del linguaggio l'uso delle azioni e dei gesti comunicativi viene considerato:", o:["Cruciale nel periodo di transizione","Un ostacolo allo sviluppo linguistico","Significativo ma non essenziale","A + E","Prodromico allo sviluppo del linguaggio verbale"], a:4 },
+  { q:"Nella raccolta del campione di linguaggio, un medesimo target lessicale potrebbe essere prodotto in modo variabile da:", o:["La presenza del genitore","La lunghezza della parola","La posizione della parola nella frase","B, C, E","Come il target viene elicitato"], a:3 },
+  { q:"Il TCGB è un test che valuta:", o:["Il livello fonologico in espressione","Il livello morfosintattico in espressione","Il livello lessicale in espressione","Il livello morfosintattico in comprensione","Il livello lessicale in comprensione"], a:3 },
+  { q:"La valutazione di un paziente:", o:["Consente di individuare gli obiettivi","Rappresenta il momento in cui si andranno ad esaminare le singole competenze","Deve durare non più di 45 minuti","Riguarda solo la fase iniziale","A + B"], a:4 },
+  { q:"In condizioni fisiologiche lo sviluppo del linguaggio:", o:["Prevede la maggior parte delle competenze non verbali e verbali acquisite a 3 anni","Si realizza fino ai 3 anni mediante progressiva maturazione in comprensione","Richiede tempi superiori ai 3 anni solo per la pragmatica","Prevede le competenze non verbali acquisite a circa 3 anni","Prevede le competenze pragmatiche acquisite a circa 3 anni"], a:0 },
+  { q:"Descrivi le tappe dello sviluppo fisiologico del linguaggio.", type:"open",
+    open:"Le tappe dello sviluppo fisiologico del linguaggio sono:\n• 0-6 mesi: vocalizzazioni, pianto comunicativo, attenzione verso la voce e l'ambiente;\n• 6-12 mesi: lallazione, gesti comunicativi, intenzionalità comunicativa;\n• 12-18 mesi: comparsa delle prime parole e aumento del vocabolario;\n• 18-24 mesi: esplosione del vocabolario e combinazione di due parole;\n• 24-36 mesi: sviluppo della frase, aumento della complessità morfosintattica e miglioramento della comprensione;\n• dopo i 3 anni: completamento progressivo delle competenze linguistiche, pragmatiche e narrative." },
+  { q:"I bambini parlatori tardivi:", o:["Sviluppano il linguaggio tra 18 e 36 mesi senza particolari deficit","Sviluppano il linguaggio tra 18 e 36 mesi con particolari deficit","Sviluppano il linguaggio tra 24 e 36 mesi con deficit comunicativo non verbale"], a:0 },
+  { q:"Relazione clinica / Piano d'intervento logopedico (Manoscritto).", type:"open",
+    open:"La relazione clinica logopedica descrive il quadro del paziente, le competenze valutate, le difficoltà emerse e gli obiettivi terapeutici. Il piano d'intervento definisce gli obiettivi a breve e lungo termine, le modalità operative, le strategie utilizzate e i criteri di verifica dei risultati." },
+  { q:"Il paziente R.T. di 5 anni è affetto da disturbi delle funzioni orali e necessita di trattamento ortodontico...", type:"open",
+    open:"Nel paziente con disturbi delle funzioni orali è necessario valutare le funzioni di respirazione, deglutizione, postura linguale, masticazione e articolazione. Il trattamento logopedico miofunzionale mira al riequilibrio delle funzioni orali in collaborazione con il trattamento ortodontico." },
+  { q:"I suoni del linguaggio vengono classificati secondo:", o:["Il timbro vocale","Il modo di articolazione","Il punto articolatorio","Le due precedenti","La ritmica dell'eloquio"], a:3 },
+  { q:"La valutazione logopedica dei disturbi di linguaggio si avvale di:", o:["Bilancio fonetico","Inventario fonetico","Anamnesi","Osservazione comportamentale","Tutte le precedenti"], a:4 },
+  { q:"Il Profilo Professionale del Logopedista è inerente:", o:["Nessuna normativa specifica","Legge Quadro CCNL","D.M. 14/09/1994 n. 742","Nessuna delle precedenti","La stessa normativa dei fisioterapisti"], a:2 },
+  { q:"Il Codice Prossemico si riferisce:", o:["Alla posizione degli interlocutori","Alla mimica gestuale","Al contesto della comunicazione","Alla distanza","Nessuna delle precedenti"], a:3 },
+  { q:"La fonetica studia:", o:["La ritmica dell'eloquio","Le proprietà articolatorie dei suoni","La strutturazione della frase","Il modo di emissione","Il punto articolatorio"], a:1 },
+  { q:"Delinei il candidato brevemente l'importanza del contatto oculare nell'avvio dell'interazione comunicativa.", type:"open",
+    open:"Il contatto oculare rappresenta un elemento fondamentale nell'avvio dell'interazione comunicativa perché permette di stabilire attenzione condivisa, intenzionalità comunicativa e reciprocità tra gli interlocutori. È un prerequisito importante per lo sviluppo delle abilità sociali e linguistiche." }
+];
+
+var QUIZ_SECTIONS = [
+  { name:"Villari 1-15", start:0, end:15 },
+  { name:"Villari 16-30", start:15, end:30 },
+  { name:"Villari 31-45", start:30, end:45 }
+];
+var _quizState = { sectionIdx:0, qIdx:0, answers:[], score:0, finished:false, revealed:false };
+
 function renderQuiz(){
-  var ph = document.getElementById("quizPlaceholder");
-  if(ph) ph.style.display = "";
+  renderQuizSections();
+  if(_quizState.finished){
+    renderQuizResults();
+  } else {
+    renderQuizQuestion();
+  }
+}
+
+function renderQuizSections(){
+  var c = document.getElementById("quizSections");
+  c.innerHTML = "";
+  QUIZ_SECTIONS.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.className = "quiz-section-btn" + (i===_quizState.sectionIdx ? " qs-active" : "");
+    b.textContent = s.name;
+    b.onclick = function(){
+      _quizState.sectionIdx = i;
+      _quizState.qIdx = 0;
+      _quizState.answers = [];
+      _quizState.score = 0;
+      _quizState.finished = false;
+      _quizState.revealed = false;
+      renderQuiz();
+    };
+    c.appendChild(b);
+  });
+}
+
+function renderQuizQuestion(){
+  var sec = QUIZ_SECTIONS[_quizState.sectionIdx];
+  var questions = VILLARI_QUIZ.slice(sec.start, sec.end);
+  var q = questions[_quizState.qIdx];
+  var total = questions.length;
+  var progress = document.getElementById("quizProgress");
+  progress.style.display = "flex";
+  document.getElementById("quizCounter").textContent = (_quizState.qIdx+1) + " / " + total;
+  document.getElementById("quizScore").textContent = _quizState.score + " pt";
+  document.getElementById("quizProgressFill").style.width = ((_quizState.qIdx)/total*100) + "%";
+
+  var container = document.getElementById("quizContainer");
+  container.innerHTML = "";
+
+  var card = document.createElement("div");
+  card.className = "quiz-card";
+
+  var numLabel = document.createElement("span");
+  numLabel.className = "quiz-q-num";
+  numLabel.textContent = "Domanda " + (sec.start + _quizState.qIdx + 1);
+  card.appendChild(numLabel);
+
+  var qText = document.createElement("p");
+  qText.className = "quiz-q-text";
+  qText.textContent = q.q;
+  card.appendChild(qText);
+
+  if(q.type === "open"){
+    var ans = document.createElement("div");
+    ans.className = "quiz-open-answer" + (_quizState.revealed ? " oa-show" : "");
+    if(_quizState.revealed){
+      ans.innerHTML = '<div class="quiz-open-answer-title">Risposta</div>' + q.open.replace(/\n/g, "<br>");
+    } else {
+      ans.innerHTML = '<div class="quiz-open-answer-title">Risposta</div>Tap per mostrare la risposta';
+      ans.style.cursor = "pointer";
+      ans.onclick = function(){
+        _quizState.revealed = true;
+        renderQuizQuestion();
+      };
+    }
+    card.appendChild(ans);
+  } else {
+    var opts = document.createElement("div");
+    opts.className = "quiz-options";
+    q.o.forEach(function(opt, i){
+      var btn = document.createElement("button");
+      btn.className = "quiz-option";
+      if(_quizState.revealed){
+        if(i === q.a) btn.classList.add("qo-correct");
+        else if(i === _quizState.answers[_quizState.qIdx]) btn.classList.add("qo-wrong");
+        btn.classList.add("qo-disabled");
+      } else if(i === _quizState.answers[_quizState.qIdx]){
+        btn.classList.add("qo-selected");
+      }
+      var letter = document.createElement("span");
+      letter.className = "qo-letter";
+      letter.textContent = String.fromCharCode(65+i);
+      btn.appendChild(letter);
+      var label = document.createElement("span");
+      label.textContent = opt;
+      btn.appendChild(label);
+      btn.onclick = function(){
+        if(_quizState.revealed) return;
+        _quizState.answers[_quizState.qIdx] = i;
+        _quizState.revealed = true;
+        if(i === q.a) _quizState.score++;
+        renderQuizQuestion();
+      };
+      opts.appendChild(btn);
+    });
+    card.appendChild(opts);
+
+    if(_quizState.revealed){
+      var fb = document.createElement("div");
+      var correct = _quizState.answers[_quizState.qIdx] === q.a;
+      fb.className = "quiz-feedback fb-show " + (correct ? "fb-correct" : "fb-wrong");
+      fb.innerHTML = '<div class="quiz-feedback-title">' + (correct ? "Corretta!" : "Sbagliata") + '</div>' +
+        '<div class="quiz-feedback-answer">Risposta corretta: ' + q.o[q.a] + '</div>';
+      card.appendChild(fb);
+    }
+  }
+
+  var nav = document.createElement("div");
+  nav.className = "quiz-nav";
+
+  var prev = document.createElement("button");
+  prev.className = "quiz-nav-btn";
+  prev.textContent = "← Precedente";
+  prev.disabled = _quizState.qIdx === 0;
+  prev.onclick = function(){
+    if(_quizState.qIdx > 0){
+      _quizState.qIdx--;
+      _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || VILLARI_QUIZ[sec.start + _quizState.qIdx].type === "open";
+      renderQuizQuestion();
+    }
+  };
+  nav.appendChild(prev);
+
+  var next = document.createElement("button");
+  next.className = "quiz-nav-btn qn-primary";
+  next.textContent = _quizState.qIdx === total - 1 ? "Risultati →" : "Successiva →";
+  next.disabled = !_quizState.revealed;
+  next.onclick = function(){
+    if(_quizState.qIdx < total - 1){
+      _quizState.qIdx++;
+      var nextQ = VILLARI_QUIZ[sec.start + _quizState.qIdx];
+      _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || (nextQ && nextQ.type === "open" && _quizState.revealed);
+      renderQuizQuestion();
+    } else {
+      _quizState.finished = true;
+      renderQuizResults();
+    }
+  };
+  nav.appendChild(next);
+
+  card.appendChild(nav);
+  container.appendChild(card);
+}
+
+function renderQuizResults(){
+  document.getElementById("quizProgress").style.display = "none";
+  var sec = QUIZ_SECTIONS[_quizState.sectionIdx];
+  var questions = VILLARI_QUIZ.slice(sec.start, sec.end);
+  var mcCount = questions.filter(function(q){ return q.type !== "open"; }).length;
+  var container = document.getElementById("quizContainer");
+  container.innerHTML = "";
+
+  var res = document.createElement("div");
+  res.className = "quiz-card quiz-results";
+  res.innerHTML =
+    '<div class="quiz-q-num">Risultati · ' + sec.name + '</div>' +
+    '<div class="quiz-results-score">' + _quizState.score + ' / ' + mcCount + '</div>' +
+    '<div class="quiz-results-label">risposte corrette</div>' +
+    '<div class="quiz-results-row"><div>Corrette: <span>' + _quizState.score + '</span></div><div>Sbagliate: <span>' + (mcCount - _quizState.score) + '</span></div></div>' +
+    '<button class="quiz-results-restart">Riprova</button>';
+  res.querySelector(".quiz-results-restart").onclick = function(){
+    _quizState.qIdx = 0;
+    _quizState.answers = [];
+    _quizState.score = 0;
+    _quizState.finished = false;
+    _quizState.revealed = false;
+    renderQuiz();
+  };
+  container.appendChild(res);
 }
 
 function renderManageList(){
