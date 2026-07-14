@@ -1400,9 +1400,8 @@ var VILLARI_QUIZ = [
 ];
 
 var QUIZ_SECTIONS = [
-  { name:"Villari 1-15", start:0, end:15 },
-  { name:"Villari 16-30", start:15, end:30 },
-  { name:"Villari 31-45", start:30, end:45 }
+  { name:"Villari", questions: VILLARI_QUIZ },
+  { name:"Aniello", questions: [] }
 ];
 var _quizState = { sectionIdx:0, qIdx:0, answers:[], score:0, finished:false, revealed:false };
 
@@ -1437,7 +1436,8 @@ function renderQuizSections(){
 
 function renderQuizQuestion(){
   var sec = QUIZ_SECTIONS[_quizState.sectionIdx];
-  var questions = VILLARI_QUIZ.slice(sec.start, sec.end);
+  var questions = sec.questions;
+  if(!questions || questions.length === 0){ renderQuizEmpty(); return; }
   var q = questions[_quizState.qIdx];
   var total = questions.length;
   var progress = document.getElementById("quizProgress");
@@ -1454,7 +1454,7 @@ function renderQuizQuestion(){
 
   var numLabel = document.createElement("span");
   numLabel.className = "quiz-q-num";
-  numLabel.textContent = "Domanda " + (sec.start + _quizState.qIdx + 1);
+  numLabel.textContent = "Domanda " + (_quizState.qIdx + 1);
   card.appendChild(numLabel);
 
   var qText = document.createElement("p");
@@ -1527,7 +1527,7 @@ function renderQuizQuestion(){
   prev.onclick = function(){
     if(_quizState.qIdx > 0){
       _quizState.qIdx--;
-      _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || VILLARI_QUIZ[sec.start + _quizState.qIdx].type === "open";
+      _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || questions[_quizState.qIdx].type === "open";
       renderQuizQuestion();
     }
   };
@@ -1540,7 +1540,7 @@ function renderQuizQuestion(){
   next.onclick = function(){
     if(_quizState.qIdx < total - 1){
       _quizState.qIdx++;
-      var nextQ = VILLARI_QUIZ[sec.start + _quizState.qIdx];
+      var nextQ = questions[_quizState.qIdx];
       _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || (nextQ && nextQ.type === "open" && _quizState.revealed);
       renderQuizQuestion();
     } else {
@@ -1554,10 +1554,20 @@ function renderQuizQuestion(){
   container.appendChild(card);
 }
 
+function renderQuizEmpty(){
+  document.getElementById("quizProgress").style.display = "none";
+  var sec = QUIZ_SECTIONS[_quizState.sectionIdx];
+  document.getElementById("quizContainer").innerHTML =
+    '<div class=\"quiz-card quiz-results\">' +
+    '<div class=\"quiz-q-num\">' + sec.name + '</div>' +
+    '<div class=\"quiz-results-label\">Le domande di questa sezione saranno disponibili a breve.</div>' +
+    '</div>';
+}
+
 function renderQuizResults(){
   document.getElementById("quizProgress").style.display = "none";
   var sec = QUIZ_SECTIONS[_quizState.sectionIdx];
-  var questions = VILLARI_QUIZ.slice(sec.start, sec.end);
+  var questions = sec.questions;
   var mcCount = questions.filter(function(q){ return q.type !== "open"; }).length;
   var container = document.getElementById("quizContainer");
   container.innerHTML = "";
