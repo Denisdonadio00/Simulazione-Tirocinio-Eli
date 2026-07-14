@@ -646,6 +646,11 @@ input, textarea { user-select:text; -webkit-user-select:text; }
       <div class="card-list" id="cardList"></div>
     </section>
 
+    <section id="view-quiz" class="view">
+      <h1 class="view-title">Quiz</h1>
+      <p class="no-results" id="quizPlaceholder">Le domande a risposta multipla appariranno qui.</p>
+    </section>
+
   </main>
 
   <!-- ===== BOTTOM NAV ===== -->
@@ -653,6 +658,10 @@ input, textarea { user-select:text; -webkit-user-select:text; }
     <button class="nav-btn nav-active" data-view="view-study" type="button">
       <svg viewBox="0 0 24 24" class="nav-icon"><rect x="3" y="9" width="4" height="6" rx="1.3"/><rect x="10" y="5" width="4" height="14" rx="1.3"/><rect x="17" y="7" width="4" height="10" rx="1.3"/></svg>
       <span>Studia</span>
+    </button>
+    <button class="nav-btn" data-view="view-quiz" type="button">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M9 9 L9 2 A 7 7 0 0 1 16 9 Z" fill="currentColor" opacity="0.35"/><circle cx="12" cy="14" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="14" r="3" fill="currentColor"/></svg>
+      <span>Quiz</span>
     </button>
     <button class="nav-btn" data-view="view-stats" type="button">
       <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 12 L12 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 12 L17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
@@ -1147,6 +1156,11 @@ $("resetProgressBtn").addEventListener("click", function(){
 var cardListEl = $("cardList");
 var searchInput = $("searchInput");
 
+function renderQuiz(){
+  var ph = document.getElementById("quizPlaceholder");
+  if(ph) ph.style.display = "";
+}
+
 function renderManageList(){
   var q = (searchInput.value||"").trim().toLowerCase();
   var list = cards.filter(function(c){
@@ -1290,6 +1304,7 @@ navBtns.forEach(function(btn){
     if(target==="view-stats") renderStats();
     if(target==="view-manage") renderManageList();
     if(target==="view-study") refreshStudy();
+    if(target==="view-quiz") renderQuiz();
     window.scrollTo(0,0);
   });
 });
