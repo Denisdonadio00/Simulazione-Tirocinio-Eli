@@ -927,13 +927,44 @@ var MIN = 60*1000, DAY = 24*60*60*1000;
 var DEFAULT_EF = 2.5;
 
 /* ---------------- Supabase client ---------------- */
-var _sb = supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__);
+var _sb = window.supabase ? supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__) : null;
 var _statsId = null;
+
+/* A browser keeps its own anonymous profile. This is not an account: clearing
+   browser data creates a new profile, but classmates do not share progress. */
+function newUuid(){
+  if(window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+  if(window.crypto && typeof window.crypto.getRandomValues === "function"){
+    var bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 15) | 64;
+    bytes[8] = (bytes[8] & 63) | 128;
+    return Array.prototype.map.call(bytes, function(b){ return b.toString(16).padStart(2,"0"); }).join("").replace(/^(.{8})(.{4})(.{4})(.{4})(.+)$/, "$1-$2-$3-$4-$5");
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){
+    var r = Math.random()*16|0, v = c === "x" ? r : (r&3|8);
+    return v.toString(16);
+  });
+}
+var DEVICE_ID = localStorage.getItem("ripasso-logopedia-device-id");
+if(!DEVICE_ID){
+  DEVICE_ID = newUuid();
+  localStorage.setItem("ripasso-logopedia-device-id", DEVICE_ID);
+}
+var CARDS_CACHE_KEY = "ripasso-logopedia-cards-" + DEVICE_ID;
+var STATS_CACHE_KEY = "ripasso-logopedia-stats-" + DEVICE_ID;
+function readCache(key){
+  try{ var value = localStorage.getItem(key); return value ? JSON.parse(value) : null; }
+  catch(e){ return null; }
+}
+function writeCache(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+}
 
 /* ---------------- Seed data ---------------- */
 var SEED = JSON.parse(document.getElementById("seed-cards").textContent);
 
-function uid(){ return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function uid(){ return newUuid(); }
 
 function freshState(seed){
   return {
@@ -953,38 +984,65 @@ function freshState(seed){
 
 /* ---------------- State load/save ---------------- */
 async function loadCards(){
-  var res = await _sb.from('flashcards').select('*').order('created_at');
-  if(res.error || !res.data || res.data.length === 0){
+  if(!_sb){
+    var localOnlyCards = readCache(CARDS_CACHE_KEY);
+    if(localOnlyCards && localOnlyCards.length) return localOnlyCards;
+    var localInitial = SEED.map(freshState);
+    writeCache(CARDS_CACHE_KEY, localInitial);
+    return localInitial;
+  }
+  var res = await _sb.from('flashcards').select('*').eq('device_id', DEVICE_ID).order('created_at');
+  if(res.error){
+    console.warn("Supabase non disponibile, uso il salvataggio locale.", res.error);
+    var cachedCards = readCache(CARDS_CACHE_KEY);
+    if(cachedCards && cachedCards.length) return cachedCards;
+    var offlineInitial = SEED.map(freshState);
+    writeCache(CARDS_CACHE_KEY, offlineInitial);
+    return offlineInitial;
+  }
+  if(!res.data || res.data.length === 0){
     var initial = SEED.map(freshState);
-    await saveCards(initial);
+    writeCache(CARDS_CACHE_KEY, initial);
+    saveCards(initial).catch(handleSaveError);
     return initial;
   }
-  return res.data.map(function(r){
+  var loaded = res.data.map(function(r){
     return { id:r.id, cat:r.cat, front:r.front, back:r.back, custom:r.custom,
       ef:r.ef, interval:r.interval, reps:r.reps, lapses:r.lapses, due:r.due,
       createdAt: new Date(r.created_at).getTime() };
   });
+  writeCache(CARDS_CACHE_KEY, loaded);
+  return loaded;
 }
 
 async function saveCards(list){
+  writeCache(CARDS_CACHE_KEY, list);
   if(!list || list.length === 0) return;
+  if(!_sb) return;
   var rows = list.map(function(c){
     return { id:c.id, cat:c.cat, front:c.front, back:c.back, custom:!!c.custom,
-      ef:c.ef, interval:c.interval, reps:c.reps, lapses:c.lapses, due:c.due };
+      ef:c.ef, interval:c.interval, reps:c.reps, lapses:c.lapses, due:c.due, device_id:DEVICE_ID };
   });
-  await _sb.from('flashcards').upsert(rows, { onConflict: 'id' });
+  var res = await _sb.from('flashcards').upsert(rows, { onConflict: 'id' });
+  if(res.error) throw res.error;
 }
 
 async function saveOneCard(c){
-  await _sb.from('flashcards').upsert(
+  writeCache(CARDS_CACHE_KEY, cards);
+  if(!_sb) return;
+  var res = await _sb.from('flashcards').upsert(
     { id:c.id, cat:c.cat, front:c.front, back:c.back, custom:!!c.custom,
-      ef:c.ef, interval:c.interval, reps:c.reps, lapses:c.lapses, due:c.due },
+      ef:c.ef, interval:c.interval, reps:c.reps, lapses:c.lapses, due:c.due, device_id:DEVICE_ID },
     { onConflict: 'id' }
   );
+  if(res.error) throw res.error;
 }
 
 async function deleteCard(id){
-  await _sb.from('flashcards').delete().eq('id', id);
+  writeCache(CARDS_CACHE_KEY, cards);
+  if(!_sb) return;
+  var res = await _sb.from('flashcards').delete().eq('id', id).eq('device_id', DEVICE_ID);
+  if(res.error) throw res.error;
 }
 
 function todayStr(d){
@@ -993,20 +1051,31 @@ function todayStr(d){
 }
 
 async function loadStats(){
-  var res = await _sb.from('study_stats').select('*').maybeSingle();
-  if(res.error || !res.data) return { streak:0, lastStudyDate:null, reviewLog:{} };
+  if(!_sb) return readCache(STATS_CACHE_KEY) || { streak:0, lastStudyDate:null, reviewLog:{} };
+  var res = await _sb.from('study_stats').select('*').eq('device_id', DEVICE_ID).maybeSingle();
+  if(res.error){
+    console.warn("Supabase non disponibile, uso le statistiche locali.", res.error);
+    return readCache(STATS_CACHE_KEY) || { streak:0, lastStudyDate:null, reviewLog:{} };
+  }
+  if(!res.data) return readCache(STATS_CACHE_KEY) || { streak:0, lastStudyDate:null, reviewLog:{} };
   _statsId = res.data.id;
-  return { streak: res.data.streak, lastStudyDate: res.data.last_study_date, reviewLog: res.data.review_log || {} };
+  var loadedStats = { streak: res.data.streak, lastStudyDate: res.data.last_study_date, reviewLog: res.data.review_log || {} };
+  writeCache(STATS_CACHE_KEY, loadedStats);
+  return loadedStats;
 }
 
 async function saveStats(s){
-  var row = { streak: s.streak, last_study_date: s.lastStudyDate, review_log: s.reviewLog, updated_at: new Date().toISOString() };
+  writeCache(STATS_CACHE_KEY, s);
+  if(!_sb) return;
+  var row = { streak: s.streak, last_study_date: s.lastStudyDate, review_log: s.reviewLog, updated_at: new Date().toISOString(), device_id:DEVICE_ID };
+  var res;
   if(_statsId){
-    await _sb.from('study_stats').update(row).eq('id', _statsId);
+    res = await _sb.from('study_stats').update(row).eq('id', _statsId).eq('device_id', DEVICE_ID);
   } else {
-    var res = await _sb.from('study_stats').insert(row).select('id').maybeSingle();
+    res = await _sb.from('study_stats').insert(row).select('id').maybeSingle();
     if(res.data) _statsId = res.data.id;
   }
+  if(res.error) throw res.error;
 }
 
 var cards = [];
@@ -1096,7 +1165,7 @@ function logReview(){
     }
     stats.lastStudyDate = t;
   }
-  saveStats(stats).catch(function(){});
+  saveStats(stats).catch(handleSaveError);
 }
 
 function endOfToday(){
@@ -1248,7 +1317,7 @@ function rate(r){
   if(!currentCard || isBusy) return;
   isBusy = true;
   applyRating(currentCard, r);
-  saveOneCard(currentCard);
+  saveOneCard(currentCard).catch(handleSaveError);
   logReview();
   updateStreakUI();
 
@@ -1378,10 +1447,10 @@ $("resetProgressBtn").addEventListener("click", function(){
   cards.forEach(function(c){
     c.ef = DEFAULT_EF; c.interval = 0; c.reps = 0; c.lapses = 0; c.due = Date.now();
   });
-  saveCards(cards).catch(function(){});
+  saveCards(cards).catch(handleSaveError);
   stats = { streak:0, lastStudyDate:null, reviewLog:{} };
   _statsId = null;
-  saveStats(stats).catch(function(){});
+  saveStats(stats).catch(handleSaveError);
   updateStreakUI();
   refreshStudy();
   renderStats();
@@ -1803,14 +1872,14 @@ cardForm.addEventListener("submit", function(e){
   if(editingId){
     var c = cards.find(function(x){ return x.id===editingId; });
     if(c){ c.front = front; c.back = back; c.cat = cat;
-      saveOneCard(c).catch(function(){});
+      saveOneCard(c).catch(handleSaveError);
     }
     showToast("Carta aggiornata");
   } else {
     var nc = freshState({cat:cat, front:front, back:back});
     nc.custom = true;
     cards.push(nc);
-    saveOneCard(nc).catch(function(){});
+    saveOneCard(nc).catch(handleSaveError);
     showToast("Carta aggiunta");
   }
   closeModal();
@@ -1824,7 +1893,7 @@ modalDelete.addEventListener("click", function(){
   if(!editingId) return;
   if(!confirm("Eliminare definitivamente questa carta?")) return;
   cards = cards.filter(function(x){ return x.id!==editingId; });
-  deleteCard(editingId).catch(function(){});
+  deleteCard(editingId).catch(handleSaveError);
   closeModal();
   renderChips();
   renderManageList();
@@ -1838,11 +1907,19 @@ $("fabAdd").addEventListener("click", function(){ openModal(null); });
 /* ---------------- Toast ---------------- */
 var toastEl = $("toast");
 var toastTimer = null;
+var syncWarningShown = false;
 function showToast(msg){
   toastEl.textContent = msg;
   toastEl.classList.add("toast-show");
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ toastEl.classList.remove("toast-show"); }, 1800);
+}
+function handleSaveError(err){
+  console.error("Errore di salvataggio Supabase:", err);
+  if(!syncWarningShown){
+    syncWarningShown = true;
+    showToast("Salvataggi conservati su questo dispositivo. Sincronizzazione online da configurare.");
+  }
 }
 
 /* ---------------- Nav ---------------- */
@@ -1943,13 +2020,18 @@ navBtns.forEach(function(btn){
 
 /* ---------------- Init ---------------- */
 (async function init(){
-  cards = await loadCards();
-  stats = await loadStats();
-  updateStreakUI();
-  renderChips();
-  refreshStudy();
-  renderStats();
-  renderManageList();
+  try{
+    cards = await loadCards();
+    stats = await loadStats();
+    updateStreakUI();
+    renderChips();
+    refreshStudy();
+    renderStats();
+    renderManageList();
+  }catch(err){
+    console.error("Errore di salvataggio Supabase:", err);
+    showToast("Impossibile caricare i salvataggi. Riprova tra poco.");
+  }
 })();
 
 /* ---------------- PWA: manifest blob + service worker ---------------- */

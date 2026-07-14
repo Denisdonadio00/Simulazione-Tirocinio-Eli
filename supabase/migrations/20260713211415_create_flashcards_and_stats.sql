@@ -90,3 +90,20 @@ CREATE POLICY "anon_update_study_stats" ON study_stats FOR UPDATE
 DROP POLICY IF EXISTS "anon_delete_study_stats" ON study_stats;
 CREATE POLICY "anon_delete_study_stats" ON study_stats FOR DELETE
   TO anon, authenticated USING (true);
+
+-- Aggiungi device_id a flashcards
+ALTER TABLE flashcards ADD COLUMN IF NOT EXISTS device_id text;
+CREATE INDEX IF NOT EXISTS idx_flashcards_device_id ON flashcards(device_id);
+
+-- Aggiungi device_id a study_stats
+ALTER TABLE study_stats ADD COLUMN IF NOT EXISTS device_id text;
+CREATE INDEX IF NOT EXISTS idx_study_stats_device_id ON study_stats(device_id);
+
+-- Rendi device_id obbligatorio e con default (così le righe vecchie avranno un device_id)
+UPDATE flashcards SET device_id = 'legacy' WHERE device_id IS NULL;
+ALTER TABLE flashcards ALTER COLUMN device_id SET NOT NULL;
+ALTER TABLE flashcards ALTER COLUMN device_id SET DEFAULT 'legacy';
+
+UPDATE study_stats SET device_id = 'legacy' WHERE device_id IS NULL;
+ALTER TABLE study_stats ALTER COLUMN device_id SET NOT NULL;
+ALTER TABLE study_stats ALTER COLUMN device_id SET DEFAULT 'legacy';
