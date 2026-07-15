@@ -534,6 +534,18 @@ input, textarea { user-select:text; -webkit-user-select:text; }
   color: #0A1513;
   border-color: var(--voce);
 }
+.quiz-list-intro{ color:var(--text-dim); font-size:14px; line-height:1.45; margin:-6px 0 16px; }
+.quiz-list-grid{
+  display:grid; grid-template-columns:repeat(6, 1fr); gap:8px;
+  margin:0 0 16px; padding:14px; border:1px solid var(--border);
+  background:var(--ink-2); border-radius:var(--radius-md);
+}
+.quiz-list-btn{
+  min-height:38px; border:1px solid var(--border-2); border-radius:9px;
+  background:var(--ink-3); color:var(--text); font:600 13px var(--font-mono); cursor:pointer;
+}
+.quiz-list-btn.ql-current{ background:var(--voce); color:#0A1513; border-color:var(--voce); }
+.quiz-list-btn.ql-done{ border-color:rgba(78,205,196,.45); }
 
 .quiz-progress{
   display:flex; align-items:center; gap:10px;
@@ -855,6 +867,13 @@ input, textarea { user-select:text; -webkit-user-select:text; }
       <div id="quizContainer"></div>
     </section>
 
+    <section id="view-quiz-list" class="view">
+      <h1 class="view-title">Lista-Quiz</h1>
+      <p class="quiz-list-intro">Scegli direttamente la domanda che vuoi svolgere.</p>
+      <div class="quiz-sections" id="quizListSections"></div>
+      <div class="quiz-list-grid" id="quizListContainer" aria-label="Elenco domande"></div>
+    </section>
+
   </main>
 
   <!-- ===== BOTTOM NAV ===== -->
@@ -866,6 +885,10 @@ input, textarea { user-select:text; -webkit-user-select:text; }
     <button class="nav-btn" data-view="view-quiz" type="button">
       <svg viewBox="0 0 24 24" class="nav-icon"><path d="M9 9 L9 2 A 7 7 0 0 1 16 9 Z" fill="currentColor" opacity="0.35"/><circle cx="12" cy="14" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="14" r="3" fill="currentColor"/></svg>
       <span>Quiz</span>
+    </button>
+    <button class="nav-btn" data-view="view-quiz-list" type="button">
+      <svg viewBox="0 0 24 24" class="nav-icon"><rect x="5" y="4" width="14" height="3" rx="1"/><rect x="5" y="10.5" width="14" height="3" rx="1"/><rect x="5" y="17" width="14" height="3" rx="1"/></svg>
+      <span>Lista-Quiz</span>
     </button>
     <button class="nav-btn" data-view="view-stats" type="button">
       <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 12 L12 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M12 12 L17 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
@@ -953,6 +976,7 @@ if(!DEVICE_ID){
 }
 var CARDS_CACHE_KEY = "ripasso-logopedia-cards-" + DEVICE_ID;
 var STATS_CACHE_KEY = "ripasso-logopedia-stats-" + DEVICE_ID;
+var QUIZ_CACHE_KEY = "ripasso-logopedia-quiz-" + DEVICE_ID;
 function readCache(key){
   try{ var value = localStorage.getItem(key); return value ? JSON.parse(value) : null; }
   catch(e){ return null; }
@@ -1597,7 +1621,35 @@ var QUIZ_SECTIONS = [
   { name:"Villari", questions: VILLARI_QUIZ },
   { name:"D'Aniello", questions: DANIELLO_QUIZ }
 ];
-var _quizState = { sectionIdx:0, qIdx:0, answers:[], score:0, finished:false, revealed:false };
+function newQuizProgress(){ return { qIdx:0, answers:[], score:0, finished:false, revealed:false }; }
+function sanitizeQuizProgress(value, total){
+  var progress = newQuizProgress();
+  if(!value || typeof value !== "object") return progress;
+  progress.qIdx = Math.max(0, Math.min(total - 1, Math.floor(Number(value.qIdx) || 0)));
+  progress.answers = Array.isArray(value.answers) ? value.answers.slice(0, total) : [];
+  progress.score = typeof value.score === "number" ? value.score : 0;
+  progress.finished = value.finished === true;
+  progress.revealed = value.revealed === true;
+  return progress;
+}
+var _savedQuizProgress = readCache(QUIZ_CACHE_KEY) || {};
+var _quizProgress = QUIZ_SECTIONS.map(function(section, i){
+  return sanitizeQuizProgress(_savedQuizProgress.sections && _savedQuizProgress.sections[i], section.questions.length);
+});
+var _quizState = { sectionIdx:Math.max(0, Math.min(QUIZ_SECTIONS.length - 1, Number(_savedQuizProgress.sectionIdx) || 0)), qIdx:0, answers:[], score:0, finished:false, revealed:false };
+var _quizListSectionIdx = _quizState.sectionIdx;
+function activateQuizSection(index){
+  var saved = _quizProgress[index];
+  _quizState = { sectionIdx:index, qIdx:saved.qIdx, answers:saved.answers.slice(), score:saved.score, finished:saved.finished, revealed:saved.revealed };
+}
+function saveQuizProgress(){
+  _quizProgress[_quizState.sectionIdx] = {
+    qIdx:_quizState.qIdx, answers:_quizState.answers.slice(), score:_quizState.score,
+    finished:_quizState.finished, revealed:_quizState.revealed
+  };
+  writeCache(QUIZ_CACHE_KEY, { sectionIdx:_quizState.sectionIdx, sections:_quizProgress });
+}
+activateQuizSection(_quizState.sectionIdx);
 
 function renderQuiz(){
   renderQuizSections();
@@ -1616,15 +1668,46 @@ function renderQuizSections(){
     b.className = "quiz-section-btn" + (i===_quizState.sectionIdx ? " qs-active" : "");
     b.textContent = s.name;
     b.onclick = function(){
-      _quizState.sectionIdx = i;
-      _quizState.qIdx = 0;
-      _quizState.answers = [];
-      _quizState.score = 0;
-      _quizState.finished = false;
-      _quizState.revealed = false;
+      saveQuizProgress();
+      activateQuizSection(i);
+      saveQuizProgress();
       renderQuiz();
     };
     c.appendChild(b);
+  });
+}
+
+function renderQuizList(){
+  var sections = document.getElementById("quizListSections");
+  var container = document.getElementById("quizListContainer");
+  sections.innerHTML = "";
+  QUIZ_SECTIONS.forEach(function(section, i){
+    var tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = "quiz-section-btn" + (i === _quizListSectionIdx ? " qs-active" : "");
+    tab.textContent = section.name;
+    tab.onclick = function(){ _quizListSectionIdx = i; renderQuizList(); };
+    sections.appendChild(tab);
+  });
+  container.innerHTML = "";
+  var sectionIdx = _quizListSectionIdx;
+  var saved = _quizProgress[sectionIdx];
+  QUIZ_SECTIONS[sectionIdx].questions.forEach(function(question, i){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "quiz-list-btn" + (sectionIdx === _quizState.sectionIdx && i === _quizState.qIdx ? " ql-current" : "") + (saved.answers[i] !== undefined ? " ql-done" : "");
+    btn.textContent = i + 1;
+    btn.setAttribute("aria-label", "Apri domanda " + (i + 1));
+    btn.onclick = function(){
+      saveQuizProgress();
+      activateQuizSection(sectionIdx);
+      _quizState.qIdx = i;
+      _quizState.finished = false;
+      _quizState.revealed = _quizState.answers[i] !== undefined;
+      saveQuizProgress();
+      document.querySelector('.nav-btn[data-view="view-quiz"]').click();
+    };
+    container.appendChild(btn);
   });
 }
 
@@ -1666,6 +1749,7 @@ function renderQuizQuestion(){
       ans.style.cursor = "pointer";
       ans.onclick = function(){
         _quizState.revealed = true;
+        saveQuizProgress();
         renderQuizQuestion();
       };
     }
@@ -1695,6 +1779,7 @@ function renderQuizQuestion(){
         _quizState.answers[_quizState.qIdx] = i;
         _quizState.revealed = true;
         if(i === q.a) _quizState.score++;
+        saveQuizProgress();
         renderQuizQuestion();
       };
       opts.appendChild(btn);
@@ -1722,6 +1807,7 @@ function renderQuizQuestion(){
     if(_quizState.qIdx > 0){
       _quizState.qIdx--;
       _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || questions[_quizState.qIdx].type === "open";
+      saveQuizProgress();
       renderQuizQuestion();
     }
   };
@@ -1736,9 +1822,11 @@ function renderQuizQuestion(){
       _quizState.qIdx++;
       var nextQ = questions[_quizState.qIdx];
       _quizState.revealed = _quizState.answers[_quizState.qIdx] !== undefined || (nextQ && nextQ.type === "open" && _quizState.revealed);
+      saveQuizProgress();
       renderQuizQuestion();
     } else {
       _quizState.finished = true;
+      saveQuizProgress();
       renderQuizResults();
     }
   };
@@ -1780,6 +1868,7 @@ function renderQuizResults(){
     _quizState.score = 0;
     _quizState.finished = false;
     _quizState.revealed = false;
+    saveQuizProgress();
     renderQuiz();
   };
   container.appendChild(res);
@@ -1937,6 +2026,7 @@ navBtns.forEach(function(btn){
     if(target==="view-manage") renderManageList();
     if(target==="view-study") refreshStudy();
     if(target==="view-quiz") renderQuiz();
+    if(target==="view-quiz-list") renderQuizList();
     window.scrollTo(0,0);
   });
 });
